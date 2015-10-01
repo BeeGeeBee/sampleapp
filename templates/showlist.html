@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Component List{% endblock title %}
+{% block main %}
+<table border="1">
+    <tr>
+        <th>{{form.name.label}}</th>
+        <th>{{form.currentstock.label}}</th>
+        <th>{{form.reorderlevel.label}}</th>
+        <th>{{form.supplier.label}}</th>
+        <th>{{form.unitprice.label}}</th>
+        <th>{{form.location.label}}</th>
+        <th>{{form.datasheet.label}}</th>
+    </tr>
+    {% for row in range(numrows) %}
+    <tr>
+        <td><a href="/showcomponents/{{form.id.value[row]}}">{{form.name.value[row]}}</a></td>
+        <td>{{form.currentstock.value[row]}}</td>
+        <td>{{form.reorderlevel.value[row]}}</td>
+        <td>{{form.supplier.value[row]}}</td>
+        <td>{{form.unitprice.value[row]}}</td>
+        <td>{{form.location.value[row]}}</td>
+        <td><a href="/docs/{{form.datasheet.value[row]}}" target="_blank">Datasheet</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock main %}

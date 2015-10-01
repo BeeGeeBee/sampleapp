@@ -1,0 +1,6 @@
+venv
+*.pyc
+*.db_cop*
+*.egg*
+dist
+build

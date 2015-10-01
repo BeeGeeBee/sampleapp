@@ -1,0 +1,12 @@
+select d.*
+from Definitions d, Categories c
+where d.CategoriesID = c.ID
+and d.ComponentID = 8
+;
+
+SELECT definitions."ComponentID" AS "definitions_ComponentID", definitions."CategoriesID" AS "definitions_CategoriesID", 
+definitions."CategoryOrder" AS "definitions_CategoryOrder", 
+categories."ID" AS "categories_ID", categories."Name" AS "categories_Name", 
+categories."Description" AS "categories_Description" 
+FROM definitions JOIN categories ON definitions."CategoriesID" = categories."ID" 
+WHERE definitions."ComponentID" = 8 ORDER BY definitions."CategoryOrder"

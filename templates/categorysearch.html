@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+ 
+{% block main %}
+<table>
+    {% for cat in range(numcats) %}
+    <tr>
+    {% for level in range(numlevels) %}
+        {% if categories[level].name[cat] != "?" %}
+        <td><a href="/categorysearch/{{categories[level].listorder[cat]}}/{{categories[level].id[cat]}}">->{{categories[level].name[cat]}}</a></td>
+        {% else %}
+        <td></td>
+        {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

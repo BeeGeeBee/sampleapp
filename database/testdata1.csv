@@ -1,0 +1,3 @@
+"Name","ID","Category","Category","Category","Category","Category","Supplier","CurrentStock","ReorderLevel","OrderCode","Feature","StrValue","Feature","IntValue","Datasheet"
+"PIC12F675",100,"IC","PIC",,,,"RapidOnline",10,2,,"Package","DIP-8","Pins",8,
+"LED 5mm Green",100,"Semiconductor","LED","5mm",,,"RapidOnline",100,10,,,,,,

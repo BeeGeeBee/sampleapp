@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+ 
+{% block main %}
+    <div>
+        {% for cat in range(numcats) %}
+        <a href="/categorysearch/{{form.categoryid.listorder[cat]}}/{{form.categoryid.id[cat]}}">->{{form.categoryid.name[cat]}}</a>
+        {% endfor %}
+    </div>
+<div>
+  <form>
+
+      {% if readlock == "True" %}
+      <fieldset disabled="disabled">
+      {% endif %}
+          <table>
+              <tr><td>{{ form.name.label }}</td><td>{{ form.name }}</td></tr>
+              <tr><td>{{ form.description.label }}</td><td>{{ form.description }}</td></tr>
+              <tr><td>{{ form.location.label }}</td><td>{{ form.location }}</td></tr>
+              <tr><td>{{ form.sublocation.label }}</td><td>{{ form.sublocation }}</td></tr>
+              <tr><td>{{ form.currentstock.label }}</td><td>{{ form.currentstock }}</td></tr>
+              <tr><td>{{ form.reorderlevel.label }}</td><td>{{ form.reorderlevel }}</td></tr>
+              <tr><td>{{ form.ordercode.label }}</td><td>{{ form.ordercode }}</td></tr>
+              <tr><td>{{ form.supplier.label }}</td><td>{{ form.supplier }}</td></tr>
+              <tr><td>{{ form.datasheet.label }}</td><td>{{ form.datasheet }}</td></tr>
+              {% for feature in range(numfeatures) %}
+              <tr><td>{{ form.feature.label[feature] }}</td><td>{{ form.feature.name[feature] }}</td></tr>
+              {% endfor %}
+        </table>
+
+      </fieldset>
+
+  </form>
+</div>
+
+{% endblock %}
