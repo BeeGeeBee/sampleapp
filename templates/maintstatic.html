@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Maintain {{statictitle}}{% endblock title %}
+{% block main %}
+<a>Maintain {{statictitle}}</a>
+<table border="1">
+    <tr>
+        <th>{{form.name.label}}</th>
+        <th>{{form.description.label}}</th>
+    </tr>
+    {% for row in range(numrows) %}
+    <tr>
+        <td>{{form.name.value[row]}}</td>
+        <td>{{form.description.value[row]}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock main %}

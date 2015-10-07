@@ -1,10 +1,9 @@
 import os
 from flask import Flask, render_template, request, send_file, redirect, url_for
-from forms import ComponentsForm
+from forms import ComponentsForm, LocationsForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
-from componentsmodule import dbconnect
 
 
 __author__ = 'Bernard'
@@ -27,32 +26,43 @@ class Category(object):
         self.componentid = []
 
 
-# Connect to database (for sqlite)
-engine = create_engine('sqlite:///database//components.db', echo=True)
+class HtmlMenu(object):
+    def __init__(self, title):
+        self.title = title
+        self.url = []
+        self.label = []
+
+
+app = Flask(__name__)
+
+# Load config and override config from an environment variable if defined
+app.config.from_pyfile('components.cfg')
+app.config.from_envvar('APP_SETTINGS', silent=True)
+
+# Connect to database
+engine = create_engine(app.config['DATABASE'], echo=app.config['DBECHO'])
 Base.metadata.bind = engine
 
 DBSession = sessionmaker()
 DBSession.bind = engine
 session = DBSession()
 
-app = Flask(__name__)
-
-# Load default config and override config from an environment variable
-app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'database/components.db'),
-    DEBUG=True,
-    SECRET_KEY='development key',
-))
-app.config.from_envvar('APP_SETTINGS', silent=True)
-con = dbconnect()
-
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    menu = HtmlMenu('Electronic Components Stock Management')
+    menu.url.append('/categorysearch/0/0')
+    menu.label.append('List By Category')
+    menu.url.append('/showlist/0')
+    menu.label.append('List All Components')
+    menu.url.append('/showlist/1')
+    menu.label.append('Low Stock Report')
+    menu.url.append('/staticmaint')
+    menu.label.append('Static Data Maintenance')
+    return render_template('menu.html', menu=menu, numrows=len(menu.url))
 
 
-def create_query(filtered=1):
+def createlistquery(filtered=1):
     '''
     Build a query object depending on whether it is a filtered query or not
     :param filtered:
@@ -76,7 +86,11 @@ def create_query(filtered=1):
     return query_obj
 
 
-def init_form():
+def initcomponentform():
+    '''
+    Create and then initialise form object with list attributes
+    :return:
+    '''
     form = ComponentsForm()
     form.name.value = []
     form.id.value = []
@@ -91,8 +105,8 @@ def init_form():
 
 @app.route('/showlist/<filtered>')
 def showlist(filtered=None):
-    form = init_form()
-    query_obj = create_query(filtered=filtered)
+    form = initcomponentform()
+    query_obj = createlistquery(filtered=filtered)
     for (componentid, name, currentstock, reorderlevel, unitprice, supplier, location, datasheet) in query_obj:
         form.id.value.append(componentid)
         form.name.value.append(name)
@@ -117,7 +131,7 @@ def show_pdf(docid=None):
 
 catsearch = Category()
 
-
+# Refactor and add POST method handling
 @app.route('/showcomponents/<componentid>', methods=['POST', 'GET'])
 def showcomponents(componentid=None):
     if request.method == 'POST':
@@ -177,7 +191,7 @@ def showcomponents(componentid=None):
     return render_template('componentform.html', form=form, numcats=len(form.categoryid.id),
                            numfeatures=len(form.feature.label), readlock='True')
 
-
+# Needs refactoring
 @app.route('/categorysearch/<categorylevel>/<categoryid>')
 def categorysearch(categorylevel=None, categoryid=None):
     if categorylevel is not None and categoryid is not None:
@@ -245,6 +259,70 @@ def categorysearch(categorylevel=None, categoryid=None):
             catmatrix[catpoint].name.append(categories.name[catcount])
         return render_template("categorysearch.html", categories=catmatrix, numcats=len(categories.id),
                                numlevels=catpoint + 1)
+
+
+# Static Data Maintenance menu
+@app.route('/staticmaint')
+def staticmaintmenu():
+    menu = HtmlMenu('Stock Static Data Maintenance Menu')
+    menu.url.append('/maintstaticdata/1')
+    menu.label.append('Add/Maintain Locations')
+    menu.url.append('/maintstaticdata/2')
+    menu.label.append('Add/Maintain Suppliers')
+    menu.url.append('/fileupload')
+    menu.label.append('Upload a CSV formatted file')
+    return render_template('menu.html', menu=menu, numrows=len(menu.url))
+
+
+def createstaticquery(querymodel):
+    '''
+    Build a query object
+    :return: orm query object
+    '''
+    queryobj = session.query(querymodel.ID, querymodel.Name, querymodel.Description). \
+        order_by(querymodel.Name)
+    return queryobj
+
+
+def initstaticform(staticform):
+    '''
+    Create and then initialise form object with list attributes
+    :return:
+    '''
+    form = staticform()
+    form.name.value = []
+    form.id.value = []
+    form.description.value = []
+    return form
+
+
+@app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
+def maintstaticdata(option=1):
+    form = initstaticform(LocationsForm)
+    if option=='1':
+        querytable = Locations
+        pagetitle = 'Locations'
+    elif option=='2':
+        querytable = Suppliers
+        pagetitle = 'Suppliers'
+    else:
+        querytable = Locations
+        pagetitle = 'Invalid Option'
+
+    queryobj = createstaticquery(querytable)
+    for (dataid, name, description)in queryobj:
+        form.id.value.append(dataid)
+        form.name.value.append(name)
+        form.description.value.append('')
+        if description:
+            form.description.value[-1] = description
+    return render_template('maintstatic.html', statictitle=pagetitle, form=form, numrows=len(form.name.value))
+
+
+@app.route("/fileupload", methods=['GET', 'POST'])
+def fileupload(filetoload = None):
+# Dummy code for the time being. To be implemented.
+    return render_template('fileupload.html')
 
 
 if __name__=='__main__':

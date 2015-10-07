@@ -14,7 +14,7 @@ class ComponentsTestCase(unittest.TestCase):
         self.db_fd, app.app.config['DATABASE'] = tempfile.mkstemp()
         app.app.config['TESTING'] = True
         self.app = app.app.test_client()
-        app.dbconnect(databasename=app.app.config['DATABASE'])
+ #       app.dbconnect(databasename=app.app.config['DATABASE'])
 
     def tearDown(self):
         os.close(self.db_fd)
@@ -25,11 +25,13 @@ class ComponentsTestCase(unittest.TestCase):
 # list by category
 # list all components
 # low stock report
+# static data maintenance
     def test_checkoptions(self):
         rv = self.app.get('/')
         assert 'List By Category' in rv.data
         assert 'List All Components' in rv.data
         assert 'Low Stock Report' in rv.data
+        assert 'Static Data Maintenance' in rv.data
 
 
 # Category search into semiconductors to next level
@@ -59,7 +61,7 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'LED 5mm Green' in rv.data
 
 
-# Open a datasheet
+# Open a datasheet and compare with original file
     def test_datasheet(self):
         with open('docs/led_green_5mm_55-0120.pdf', 'rb') as pdf1:
             pdf1StringIO = StringIO.StringIO(pdf1.read())
@@ -68,6 +70,40 @@ class ComponentsTestCase(unittest.TestCase):
         pdf1StringIO.seek(0)
         assert rv.data == pdf1StringIO.read()
 
+
+# Static data maintenance options
+# Add/Maintain Locations
+# Add/Maintain Suppliers
+# Upload a CSV formatted file
+    def test_staticdataoptions(self):
+        rv = self.app.get('/staticmaint')
+        assert 'Add/Maintain Locations' in rv.data
+        assert 'Add/Maintain Suppliers' in rv.data
+        assert 'Upload a CSV formatted file' in rv.data
+
+
+# Maintain Locations
+    def test_maintlocations(self):
+        rv = self.app.get('/maintstaticdata/1')
+        # Page labelled correctly
+        assert 'Maintain Locations' in rv.data
+        # Page displays current locations
+        assert 'MainCupboard - Cab A Tray 1' in rv.data
+
+
+# Maintain Suppliers
+    def test_maintsuppliers(self):
+        rv = self.app.get('/maintstaticdata/2')
+        # Page labelled correctly
+        assert 'Maintain Suppliers' in rv.data
+        # Page displays current suppliers
+        assert 'RapidOnline' in rv.data
+
+
+# Upload a CSV formatted file
+    def test_uploadcsvfile(self):
+        rv = self.app.get('/fileupload')
+        assert 'Stock Data File Upload' in rv.data
 
 if __name__ == '__main__':
     unittest.main()

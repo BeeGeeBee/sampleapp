@@ -19,3 +19,10 @@ class ComponentsForm(Form):
     submit = SubmitField("Return")
     categoryid = StringField('Category', [Length(max=5)])
     feature = StringField('Feature', [Length(max=50)])
+
+
+class LocationsForm(Form):
+    id = StringField('ID', [Length(max=50)])
+    name = StringField('Name', [Length(max=50)])
+    description = StringField('Description', [Length(max=50)])
+    sublocation = StringField('Location', [Length(max=50)])
