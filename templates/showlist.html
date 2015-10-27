@@ -19,7 +19,7 @@
         <td>{{form.supplier.value[row]}}</td>
         <td>{{form.unitprice.value[row]}}</td>
         <td>{{form.location.value[row]}}</td>
-        <td><a href="/docs/{{form.datasheet.value[row]}}" target="_blank">Datasheet</a></td>
+        <td title="Click to show the relevant datasheet in a new window."><a href="/docs/{{form.datasheet.value[row]}}" target="_blank">Datasheet</a></td>
     </tr>
     {% endfor %}
 </table>

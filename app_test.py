@@ -3,6 +3,7 @@ import app
 import unittest
 import tempfile
 import StringIO
+from componentsmodule import loadfile
 
 
 __author__ = 'bernie'
@@ -102,8 +103,30 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Upload a CSV formatted file
     def test_uploadcsvfile(self):
+        testfile = 'testcsv.csv'
+        # Page to select the file name
         rv = self.app.get('/fileupload')
         assert 'Stock Data File Upload' in rv.data
+        # Log of file load operation
+        rv = self.app.post('/fileupload', data = dict(
+            uploadfile = testfile
+        ))
+        assert 'Stock Data File Upload Log' in rv.data
+        # If no file given then report it.
+        response = loadfile()
+        assert 'No filename supplied.' in response.filestatus
+        # If file not found report it.
+        response = loadfile(testfile)
+        assert 'File Not Found. <{}>'.format(testfile) in response.filestatus
+        # Only valid column headers in file
+        testfile = 'testdata.csv'
+        response = loadfile(testfile)
+        assert 'Invalid column header <dummy> in file <{}>.'.format(testfile) in response.filestatus
+        # Report file successfully loaded
+        testfile = 'testdata.csv'
+        response = loadfile(testfile)
+        assert 'File <{}> successfully loaded.'.format(testfile) in response.filestatus
+
 
 if __name__ == '__main__':
     unittest.main()

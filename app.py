@@ -4,6 +4,7 @@ from forms import ComponentsForm, LocationsForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
+from componentsmodule import loadfile
 
 
 __author__ = 'Bernard'
@@ -322,7 +323,12 @@ def maintstaticdata(option=1):
 @app.route("/fileupload", methods=['GET', 'POST'])
 def fileupload(filetoload = None):
 # Dummy code for the time being. To be implemented.
-    return render_template('fileupload.html')
+    if request.method == 'POST':
+        fileload = loadfile(request.form['uploadfile'])
+        return render_template('fileloadstatus.html', statustext=fileload.filestatus )
+
+    else:
+        return render_template('fileupload.html')
 
 
 if __name__=='__main__':

@@ -253,3 +253,8 @@ class Component(object):
                                          self.datasheet, self.ordercode, self.unitprice)]
         con.cursor().execute(cmd, values)
         con.commit()
+
+
+def loadfile( filename = None ):
+    if filename == None :
+        return "No filename supplied."

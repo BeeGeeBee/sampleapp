@@ -1,10 +1,12 @@
+import sqlite3 as sql
+import os
+import csv
+
+
 __author__ = 'Bernard'
 """
 componentsmodule to access data, load data etc in components database
 """
-
-import sqlite3 as sql
-import os
 
 
 def dbconnect(databasename='database/components.db', readonly=True):
@@ -253,3 +255,41 @@ class Component(object):
                                          self.datasheet, self.ordercode, self.unitprice)]
         con.cursor().execute(cmd, values)
         con.commit()
+
+
+def filecheck(fn):
+    try:
+        open(fn, "r")
+        return 1
+    except IOError:
+        return 0
+
+
+class FileLoad(object):
+
+    def __init__(self, filename):
+        self.filestatus = ""
+        self.fp = None
+        self.status = 0
+        if filename is None:
+            self.filestatus = 'No filename supplied.'
+            self.status = 1
+        elif not (filecheck(filename)):
+            self.filestatus = 'File Not Found. <{}>'.format(filename)
+            self.status = 2
+
+
+    def loadtitles(self):
+        self.titles = []
+
+def loadfile(filename=None):
+    fileloader = FileLoad(filename)
+    if fileloader.status == 0:
+        fileloader.filestatus = 'Loading from file : {}\n'.format(filename)
+        with open(filename, mode='r') as fp:
+            csvreader = csv.reader(fp)
+            csvtitles = csvreader.next()
+
+        fileloader.filestatus = '{}File <{}> successfully loaded.\n'.\
+            format(fileloader.filestatus,filename)
+    return fileloader
