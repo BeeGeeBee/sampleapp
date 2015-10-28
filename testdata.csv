@@ -1,0 +1,19 @@
+"Name","ID","Description","Category","Category","Category","Category","Category","Supplier","CurrentStock","ReorderLevel","OrderCode","UnitPrice","Location","Sublocation","Datasheet","Feature","StrValue","Feature","IntValue"
+"PIC16F887A",0,"PIC 16F887A Microcontroller","IC","PIC","PIC16F887A",,,"RapidOnline",2,1,,4,"MainCupboard",,"pic16f887.pdf","Package","DIP-40","Pins",40
+"PIC12F675",0,"PIC 12F675 Microcontroller","IC","PIC","PIC12F675",,,"RapidOnline",2,1,,0.6,"MainCupboard",,"pic12f629-675.pdf","Package","DIP-8","Pins",8
+"PIC16F628",0,"PIC 16F628 Microcontroller","IC","PIC","PIC16F628",,,"RapidOnline",2,1,,1.5,"MainCupboard",,"pic16f628.pdf","Package","DIP-18","Pins",18
+"PIC12F629",0,"PIC 12F629 Microcontroller","IC","PIC","PIC12F629",,,"RapidOnline",2,1,,0.9,"MainCupboard",,"pic12f629-675.pdf","Package","DIP-8","Pins",8
+"PIC12F684",0,"PIC 12F684 Microcontroller","IC","PIC","PIC12F684",,,"RapidOnline",2,1,,4,"MainCupboard",,"pic12f684.pdf","Package","DIP-14","Pins",14
+"PicKit3 Demo Board",0,"PicKit3 Express Development Board","Dev Board","PIC","PicKit3 Demo Board",,,"Microchip",1,,,0,"MainCupboard",,"pickit3_demo_board41296B.pdf","PIC","18F45K20",,
+"PicKit3 Programmer",0,"Pickit3 Programmer Debugger","Programmer","PIC","PicKit3 Programmer",,,"Microchip",1,,,60,"MainCupboard",,"PICkit_3_User_Guide_51795A.pdf",,,,
+"LED 5mm Green",0,"LED 5mm Green","Semiconductor","LED","LED 5mm Green",,,"RapidOnline",9,10,"55-0120",0.09,"MainCupboard","Cab A Tray 1","led_green_5mm_55-0120.pdf",,,,
+"LED 5mm Red",0,"LED 5mm Red","Semiconductor","LED","LED 5mm Red",,,"RapidOnline",100,10,"55-0155",0.09,"MainCupboard","Cab A Tray 2","led_red_5mm_55-0155.pdf",,,,
+"LED 5mm Yellow",0,"LED 5mm Yellow","Semiconductor","LED","LED 5mm Yellow",,,"RapidOnline",100,10,"55-0125",0.09,"MainCupboard","Cab A Tray 3","led_yellow_5mm_55-0125.pdf",,,,
+"CA3140E MOS/FET Op Amp",0,"CA3140E MOS/FET Op Amp","IC","Op Amps","FET Op Amps","CA3140E MOS/FET Op Amp",,"RapidOnline",2,1,"82-0688",1.18,"MainCupboard","Comp Box 1","ca3140e_op_amp_82-0688.pdf","Package","DIP-8","Pins",8
+"2-Way 6A Screwless Terminal Block",0,"2-Way 6A Screwless Terminal Block","Connectors","Terminal Blocks","Screwless","2-Way 6A Screwless Terminal Block",,"RapidOnline",1,2,"21-2626",0.37,"MainCupboard","Comp Box 1","screwless_terminal_block_21-2626e.pdf",,,,
+"4013B Dual D Type Flip Flop",0,"4013B Dual D Type Flip Flop","IC","Logic","4000 Series","4000 Series CMOS","4013B Dual D Type Flip Flop","RapidOnline",2,2,"83-0332",0.48,"MainCupboard","Comp Box 1","4013B_flip_flop_83-0332.pdf","Package","DIP-14","Pins",14
+"4002B Dual 4 input NOR Gate",0,"4002B Dual 4 input NOR Gate","IC","Logic","4000 Series","4000 Series CMOS","4002B Dual 4 input NOR Gate","Discontinued",2,0,"83-0318",0,"MainCupboard","Comp Box 1","4002B_NOR_gate_83-0318.pdf","Package","DIP-14","Pins",14
+"4001B Dual 2 Input NOR Gate",0,"4001B Dual 2 Input NOR Gate","IC","Logic","4000 Series","4000 Series CMOS","4001B Dual 2 Input NOR Gate","RapidOnline",2,2,"83-0316",0.25,"MainCupboard","Comp Box 1","4001B_NOR_gate_83-0316.pdf","Package","DIP-14","Pins",14
+"4017B Decade Counter/Driver",0,"4017B Decade Counter/Driver","IC","Logic","4000 Series","4000 Series CMOS","4017B Decade Counter/Driver","RapidOnline",2,2,"83-0340",0.36,"MainCupboard","Comp Box 1","4017B_Decade_Counter_83-0340.pdf","Package","DIP-14","Pins",14
+"LM3914 LED Bar/Dot Display Driver",0,"LM3914 LED Bar/Dot Display Driver","IC","LED & Display Drivers","Bargraph Drivers","LM3914 LED Bar/Dot Display Driver",,"RapidOnline",1,1,"82-0712",3.02,"MainCupboard","Comp Box 1","LM3914_LED_Display_Driver_82-0712.pdf","Package","DIP-18","Pins",18
+"4011B Quad 2 Input NAND Gate",0,"4011B Quad 2 Input NAND Gate","IC","Logic","4000 Series","4000 Series CMOS","4011B Quad 2 Input NAND Gate","RapidOnline",2,2,"83-0328",0.33,"MainCupboard","Comp Box 1","4011B_NAND_gate_83-0264e.pdf","Package","DIP-14","Pins",14

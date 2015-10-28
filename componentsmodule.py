@@ -265,31 +265,75 @@ def filecheck(fn):
         return 0
 
 
+ERRNoFileName = 1
+ERRFileNotFound = 2
+ERRInvalidTitle = 3
+ERRInvalidNumCols = 4
+
 class FileLoad(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, session):
         self.filestatus = ""
         self.fp = None
         self.status = 0
+        self.titles = []
+        self.rowsloaded = 0
+        self.duplicaterows = 0
         if filename is None:
             self.filestatus = 'No filename supplied.'
-            self.status = 1
+            self.status = ERRNoFileName
         elif not (filecheck(filename)):
             self.filestatus = 'File Not Found. <{}>'.format(filename)
-            self.status = 2
+            self.status = ERRFileNotFound
 
+        self.dbsession = session
 
-    def loadtitles(self):
-        self.titles = []
+    def loadtitles(self, filep):
+        self.csvreader = csv.reader(filep)
+        self.titles = self.csvreader.next()
+        for title in self.titles:
+            try:
+                test = attribute_lookup[title]
 
-def loadfile(filename=None):
-    fileloader = FileLoad(filename)
+            except KeyError:
+                self.filestatus = '{}Invalid column header <{}>\n'.\
+                    format(self.filestatus,title)
+                return ERRInvalidTitle
+        return 0
+
+    def loaddatarows(self):
+        nrows = 0
+        status = 0
+        for data in self.csvreader:
+            nrows += 1
+            if len(data)!=len(self.titles):
+                self.filestatus = '{}Invalid number of columns in data row <{}>\n'.\
+                    format(self.filestatus,nrows)
+                status = ERRInvalidNumCols
+            else:
+                self.rowsloaded += 1
+                self.filestatus = '{}<{}> Data rows successfully loaded.\n'.\
+                    format(self.filestatus,self.rowsloaded)
+
+        return status
+
+def loadfile(filename=None,session=None):
+    fileloader = FileLoad(filename,session)
     if fileloader.status == 0:
         fileloader.filestatus = 'Loading from file : {}\n'.format(filename)
         with open(filename, mode='r') as fp:
-            csvreader = csv.reader(fp)
-            csvtitles = csvreader.next()
+            stat = fileloader.loadtitles(fp)
+            if stat==0:
+                stat = fileloader.loaddatarows()
+                if stat==0:
+                    fileloader.filestatus = '{}File <{}> successfully loaded.\n'.\
+                        format(fileloader.filestatus,filename)
+                else:
+                    fileloader.filestatus = '{}File <{}> load aborted.\n'.\
+                        format(fileloader.filestatus,filename)
 
-        fileloader.filestatus = '{}File <{}> successfully loaded.\n'.\
-            format(fileloader.filestatus,filename)
+            else:
+                fileloader.filestatus = '{}File <{}> failed loading title row.\n'.\
+                    format(fileloader.filestatus,filename)
+
     return fileloader

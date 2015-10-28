@@ -14,6 +14,7 @@ class ComponentsTestCase(unittest.TestCase):
     def setUp(self):
         self.db_fd, app.app.config['DATABASE'] = tempfile.mkstemp()
         app.app.config['TESTING'] = True
+        print 'Database:', app.app.config['DATABASE']
         self.app = app.app.test_client()
  #       app.dbconnect(databasename=app.app.config['DATABASE'])
 
@@ -119,13 +120,18 @@ class ComponentsTestCase(unittest.TestCase):
         response = loadfile(testfile)
         assert 'File Not Found. <{}>'.format(testfile) in response.filestatus
         # Only valid column headers in file
-        testfile = 'testdata.csv'
+        testfile = 'testdatafail1.csv'
         response = loadfile(testfile)
-        assert 'Invalid column header <dummy> in file <{}>.'.format(testfile) in response.filestatus
-        # Report file successfully loaded
+        assert 'Invalid column header <Dummy>' in response.filestatus
+        # Each row must have same number of columns as header row.
+        testfile = 'testdatafail2.csv'
+        response = loadfile(testfile)
+        assert 'Invalid number of columns in data row <1>' in response.filestatus
+        # Report file successfully loaded with the number of rows loaded.
         testfile = 'testdata.csv'
         response = loadfile(testfile)
         assert 'File <{}> successfully loaded.'.format(testfile) in response.filestatus
+        assert '> Data rows successfully loaded.' in response.filestatus
 
 
 if __name__ == '__main__':

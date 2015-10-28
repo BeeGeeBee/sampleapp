@@ -41,6 +41,7 @@ app.config.from_pyfile('components.cfg')
 app.config.from_envvar('APP_SETTINGS', silent=True)
 
 # Connect to database
+print 'Connect to database:',app.config['DATABASE']
 engine = create_engine(app.config['DATABASE'], echo=app.config['DBECHO'])
 Base.metadata.bind = engine
 
@@ -324,7 +325,7 @@ def maintstaticdata(option=1):
 def fileupload(filetoload = None):
 # Dummy code for the time being. To be implemented.
     if request.method == 'POST':
-        fileload = loadfile(request.form['uploadfile'])
+        fileload = loadfile(request.form['uploadfile'],session)
         return render_template('fileloadstatus.html', statustext=fileload.filestatus )
 
     else:
