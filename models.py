@@ -28,11 +28,11 @@ class Components(Base):
     ID = Column(Integer, primary_key=True)
     Name = Column(String(50))
     Description = Column(String(250))
-    CategoriesID = Column(Integer)
-    SuppliersID = Column(Integer)
+    CategoriesID = Column(Integer, primary_key=True)
+    SuppliersID = Column(Integer, primary_key=True)
     CurrentStock = Column(Integer)
     ReorderLevel = Column(Integer)
-    LocationsID = Column(Integer)
+    LocationsID = Column(Integer, primary_key=True)
     Datasheet = Column(String(250))
     OrderCode = Column(String(50))
     UnitPrice = Column(Float)
@@ -48,8 +48,8 @@ class Categories(Base):
 class Definitions(Base):
     __tablename__ = 'definitions'
     ComponentID = Column(Integer, primary_key=True)
-    CategoriesID = Column(Integer)
-    CategoryOrder = Column(Integer)
+    CategoriesID = Column(Integer, primary_key=True)
+    CategoryOrder = Column(Integer, primary_key=True)
 
 
 class Features(Base):

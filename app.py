@@ -2,36 +2,11 @@ import os
 from flask import Flask, render_template, request, send_file, redirect, url_for
 from forms import ComponentsForm, LocationsForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
-from componentsmodule import loadfile
+from sqlalchemy import func
+from componentsmodule import loadfile, Category, HtmlMenu, createdbsession
 
 
 __author__ = 'Bernard'
-
-
-class Category(object):
-    '''
-    Define Category class to keep track of category searches
-    '''
-    def __init__(self):
-        self.id = []
-        self.name = []
-        self.listorder = []
-        self.componentid = []
-
-    def reset(self):
-        self.id = []
-        self.name = []
-        self.listorder = []
-        self.componentid = []
-
-
-class HtmlMenu(object):
-    def __init__(self, title):
-        self.title = title
-        self.url = []
-        self.label = []
 
 
 app = Flask(__name__)
@@ -41,13 +16,7 @@ app.config.from_pyfile('components.cfg')
 app.config.from_envvar('APP_SETTINGS', silent=True)
 
 # Connect to database
-print 'Connect to database:',app.config['DATABASE']
-engine = create_engine(app.config['DATABASE'], echo=app.config['DBECHO'])
-Base.metadata.bind = engine
-
-DBSession = sessionmaker()
-DBSession.bind = engine
-session = DBSession()
+session = createdbsession(app.config['DATABASE'], sqlecho=app.config['DBECHO'], cleardown=False)
 
 
 @app.route('/')
@@ -65,14 +34,15 @@ def index():
 
 
 def createlistquery(filtered=1):
-    '''
+    """
     Build a query object depending on whether it is a filtered query or not
     :param filtered:
     :return: orm query object
-    '''
+    """
     if filtered == '1':
-        query_obj = session.query(Components.ID, Components.Name, Components.CurrentStock, Components.ReorderLevel,
-                        Components.UnitPrice, Suppliers.Name, Locations.Name, Components.Datasheet). \
+        query_obj = session.query(Components.ID, Components.Name, Components.CurrentStock,
+                                  Components.ReorderLevel, Components.UnitPrice, Suppliers.Name,
+                                  Locations.Name, Components.Datasheet). \
                         outerjoin(Suppliers, Components.SuppliersID == Suppliers.ID). \
                         outerjoin(Locations, Components.LocationsID == Locations.ID). \
                         filter(Components.CurrentStock <= Components.ReorderLevel). \
@@ -80,8 +50,8 @@ def createlistquery(filtered=1):
                         order_by(Components.Name)
     else:
         query_obj = session.query(Components.ID, Components.Name, Components.CurrentStock,
-                        Components.ReorderLevel, Components.UnitPrice, Suppliers.Name, Locations.Name,
-                        Components.Datasheet). \
+                                  Components.ReorderLevel, Components.UnitPrice, Suppliers.Name,
+                                  Locations.Name, Components.Datasheet). \
                         outerjoin(Suppliers, Components.SuppliersID == Suppliers.ID). \
                         outerjoin(Locations, Components.LocationsID == Locations.ID). \
                         order_by(Components.Name)
@@ -89,10 +59,10 @@ def createlistquery(filtered=1):
 
 
 def initcomponentform():
-    '''
+    """
     Create and then initialise form object with list attributes
     :return:
-    '''
+    """
     form = ComponentsForm()
     form.name.value = []
     form.id.value = []
@@ -132,6 +102,7 @@ def show_pdf(docid=None):
 
 
 catsearch = Category()
+
 
 # Refactor and add POST method handling
 @app.route('/showcomponents/<componentid>', methods=['POST', 'GET'])
@@ -192,6 +163,7 @@ def showcomponents(componentid=None):
 
     return render_template('componentform.html', form=form, numcats=len(form.categoryid.id),
                            numfeatures=len(form.feature.label), readlock='True')
+
 
 # Needs refactoring
 @app.route('/categorysearch/<categorylevel>/<categoryid>')
@@ -277,20 +249,20 @@ def staticmaintmenu():
 
 
 def createstaticquery(querymodel):
-    '''
+    """
     Build a query object
     :return: orm query object
-    '''
+    """
     queryobj = session.query(querymodel.ID, querymodel.Name, querymodel.Description). \
         order_by(querymodel.Name)
     return queryobj
 
 
 def initstaticform(staticform):
-    '''
+    """
     Create and then initialise form object with list attributes
     :return:
-    '''
+    """
     form = staticform()
     form.name.value = []
     form.id.value = []
@@ -301,10 +273,10 @@ def initstaticform(staticform):
 @app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
 def maintstaticdata(option=1):
     form = initstaticform(LocationsForm)
-    if option=='1':
+    if option == '1':
         querytable = Locations
         pagetitle = 'Locations'
-    elif option=='2':
+    elif option == '2':
         querytable = Suppliers
         pagetitle = 'Suppliers'
     else:
@@ -318,14 +290,14 @@ def maintstaticdata(option=1):
         form.description.value.append('')
         if description:
             form.description.value[-1] = description
-    return render_template('maintstatic.html', statictitle=pagetitle, form=form, numrows=len(form.name.value))
+    return render_template('maintstatic.html', statictitle=pagetitle, form=form,
+                           numrows=len(form.name.value))
 
 
 @app.route("/fileupload", methods=['GET', 'POST'])
-def fileupload(filetoload = None):
-# Dummy code for the time being. To be implemented.
+def fileupload():
     if request.method == 'POST':
-        fileload = loadfile(request.form['uploadfile'],session)
+        fileload = loadfile(request.form['uploadfile'], session)
         return render_template('fileloadstatus.html', statustext=fileload.filestatus )
 
     else:

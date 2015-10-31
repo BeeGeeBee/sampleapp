@@ -3,7 +3,7 @@
 "PIC12F675",0,"PIC 12F675 Microcontroller","IC","PIC","PIC12F675",,,"RapidOnline",2,1,,0.6,"MainCupboard",,"pic12f629-675.pdf","Package","DIP-8","Pins",8
 "PIC16F628",0,"PIC 16F628 Microcontroller","IC","PIC","PIC16F628",,,"RapidOnline",2,1,,1.5,"MainCupboard",,"pic16f628.pdf","Package","DIP-18","Pins",18
 "PIC12F629",0,"PIC 12F629 Microcontroller","IC","PIC","PIC12F629",,,"RapidOnline",2,1,,0.9,"MainCupboard",,"pic12f629-675.pdf","Package","DIP-8","Pins",8
-"PIC12F684",0,"PIC 12F684 Microcontroller","IC","PIC","PIC12F684",,,"RapidOnline",2,1,,4,"MainCupboard",,"pic12f684.pdf","Package","DIP-14","Pins",14
+"PIC12F684",0,"PIC 12F684 Microcontroller","IC","PIC","PIC12F684",,,"RapidOnline",2,1,,4,"MainCupboard - Cab A Tray 1",,"pic12f684.pdf","Package","DIP-14","Pins",14
 "PicKit3 Demo Board",0,"PicKit3 Express Development Board","Dev Board","PIC","PicKit3 Demo Board",,,"Microchip",1,,,0,"MainCupboard",,"pickit3_demo_board41296B.pdf","PIC","18F45K20",,
 "PicKit3 Programmer",0,"Pickit3 Programmer Debugger","Programmer","PIC","PicKit3 Programmer",,,"Microchip",1,,,60,"MainCupboard",,"PICkit_3_User_Guide_51795A.pdf",,,,
 "LED 5mm Green",0,"LED 5mm Green","Semiconductor","LED","LED 5mm Green",,,"RapidOnline",9,10,"55-0120",0.09,"MainCupboard","Cab A Tray 1","led_green_5mm_55-0120.pdf",,,,

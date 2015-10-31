@@ -3,8 +3,10 @@ import app
 import unittest
 import tempfile
 import StringIO
-from componentsmodule import loadfile
-
+from componentsmodule import FileLoad, loadfile, createdbsession
+from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker
 
 __author__ = 'bernie'
 
@@ -14,13 +16,22 @@ class ComponentsTestCase(unittest.TestCase):
     def setUp(self):
         self.db_fd, app.app.config['DATABASE'] = tempfile.mkstemp()
         app.app.config['TESTING'] = True
-        print 'Database:', app.app.config['DATABASE']
         self.app = app.app.test_client()
- #       app.dbconnect(databasename=app.app.config['DATABASE'])
+#       app.dbconnect(databasename=app.app.config['DATABASE'])
 
     def tearDown(self):
         os.close(self.db_fd)
-        #os.unlink(app.app.config['DATABASE'])
+        os.unlink(app.app.config['DATABASE'])
+
+    def test_database(self):
+        print "Creating test database.\n"
+        testsession = createdbsession('sqlite:///testdatabase.db', sqlecho=False, cleardown=True)
+        # Initial Populate
+        fileload = loadfile('testdata.csv', testsession)
+        print fileload.filestatus
+        testsession.close()
+
+
 
 
 # Check Options to
@@ -109,27 +120,29 @@ class ComponentsTestCase(unittest.TestCase):
         rv = self.app.get('/fileupload')
         assert 'Stock Data File Upload' in rv.data
         # Log of file load operation
-        rv = self.app.post('/fileupload', data = dict(
-            uploadfile = testfile
+        rv = self.app.post('/fileupload', data=dict(
+            uploadfile=testfile
         ))
         assert 'Stock Data File Upload Log' in rv.data
         # If no file given then report it.
-        response = loadfile()
+        response = FileLoad()
         assert 'No filename supplied.' in response.filestatus
         # If file not found report it.
-        response = loadfile(testfile)
+        response = FileLoad(testfile)
         assert 'File Not Found. <{}>'.format(testfile) in response.filestatus
+        # Set up a session
+        testsession = createdbsession('sqlite:///testdatabase.db', sqlecho=False, cleardown=True)
         # Only valid column headers in file
         testfile = 'testdatafail1.csv'
-        response = loadfile(testfile)
+        response = loadfile(testfile, testsession)
         assert 'Invalid column header <Dummy>' in response.filestatus
         # Each row must have same number of columns as header row.
         testfile = 'testdatafail2.csv'
-        response = loadfile(testfile)
+        response = loadfile(testfile, testsession)
         assert 'Invalid number of columns in data row <1>' in response.filestatus
         # Report file successfully loaded with the number of rows loaded.
         testfile = 'testdata.csv'
-        response = loadfile(testfile)
+        response = loadfile(testfile, testsession)
         assert 'File <{}> successfully loaded.'.format(testfile) in response.filestatus
         assert '> Data rows successfully loaded.' in response.filestatus
 
