@@ -25,9 +25,9 @@ def createdbsession(dbname=None, sqlecho=None, cleardown=False):
     engine = create_engine(dbname, echo=sqlecho, poolclass=NullPool)
     Base.metadata.bind = engine
 
-    DBSession = sessionmaker()
-    DBSession.bind = engine
-    session = DBSession()
+    dbsession = sessionmaker()
+    dbsession.bind = engine
+    session = dbsession()
     # Add the schema
     # If cleardown then drop all first
     if cleardown:
@@ -36,7 +36,7 @@ def createdbsession(dbname=None, sqlecho=None, cleardown=False):
     return session
 
 
-def parsesupplier(con, table, name, self, dummy):
+def parsesupplier(con, table, name, self):
     """
 
     :rtype : object
@@ -46,21 +46,20 @@ def parsesupplier(con, table, name, self, dummy):
     :return: integer
     """
     staticid = 0
-    print 'parsesupplier ', name, con
     if name:
         qry = con.query(Suppliers.ID).filter(Suppliers.Name == name)
-        staticid = getid(qry, name, table)
+        staticid = getid(qry)
         if staticid == 0:
-            print 'Adding supplier.\n'
             qry = con.query(func.max(Suppliers.ID))
-            staticid = getnextid(con,qry)
+            staticid = getnextid(con, qry)
             add_supplier = Suppliers(ID=staticid, Name=name, Description=name)
             con.add(add_supplier)
             con.commit()
+            self.loadstatus = '{}Adding Supplier {}\n'.format(self.loadstatus, name)
     return staticid
 
 
-def parselocation(con, table, name, self, dummy):
+def parselocation(con, table, name, self):
     """
 
     :rtype : object
@@ -70,17 +69,16 @@ def parselocation(con, table, name, self, dummy):
     :return: integer
     """
     staticid = 0
-    print 'parselocation ', name, con
     if name:
         qry = con.query(Locations.ID).filter(Locations.Name == name)
-        staticid = getid(qry, name, table)
+        staticid = getid(qry)
         if staticid == 0:
-            print 'Adding Location.\n'
             qry = con.query(func.max(Locations.ID))
-            staticid = getnextid(con,qry)
+            staticid = getnextid(con, qry)
             add_location = Locations(ID=staticid, Name=name, Description=name)
             con.add(add_location)
             con.commit()
+            self.loadstatus = '{}Adding Location {}\n'.format(self.loadstatus, name)
     return staticid
 
 
@@ -91,18 +89,16 @@ def getfeatureid(con, name, self):
     :param name:
     :return:
     """
-    print 'getfeatureid <{}>\n'.format(name), con
     try:
-        data = con.query(Features.ID).filter(Features.Name==name).\
-            filter(Features.CategoriesID==self.categoriesid[-1]).one()
+        data = con.query(Features.ID).filter(Features.Name == name).\
+            filter(Features.CategoriesID == self.categoriesid[-1]).one()
         con.commit()
-        print data
         return data[0]
     except NoResultFound:
         return 0
 
 
-def updatefeature(con, column, strvalue, self, dummy):
+def updatefeature(con, column, strvalue, self):
     """
 
     :param con:
@@ -112,18 +108,16 @@ def updatefeature(con, column, strvalue, self, dummy):
     """
     if strvalue:
         if column == 'StrValue':
-            print 'Updating Feature strvalue.'
-            con.query(Features).update({Features.StrValue: strvalue, \
+            con.query(Features).update({Features.StrValue: strvalue,
                                         Features.CategoriesID: self.categoriesid[-1]})
         else:
-            print 'Updating Feature intvalue.'
-            con.query(Features).update({Features.IntValue: strvalue,\
+            con.query(Features).update({Features.IntValue: strvalue,
                                         Features.CategoriesID: self.categoriesid[-1]})
         con.commit()
     return column
 
 
-def updatelocations(con, column, strvalue, self, dummy):
+def updatelocations(con, column, strvalue, self):
     """
 
     :param con:
@@ -131,15 +125,14 @@ def updatelocations(con, column, strvalue, self, dummy):
     :param strvalue:
     :return:
     """
-    print 'updatelocations <{}>\n'.format(strvalue)
     if strvalue:
-        print 'Updating sublocation.'
         con.query(Locations).update({Locations.Sublocation: strvalue})
         con.commit()
+        self.loadstatus = '{}Adding Sublocation {}\n'.format(self.loadstatus, strvalue)
     return column
 
 
-def parsecomponentid(session, table, name, self, dummy):
+def parsecomponentid(session, table, name, self):
     """
 
     :param con:
@@ -147,12 +140,11 @@ def parsecomponentid(session, table, name, self, dummy):
     :param name:
     :return:
     """
-    print 'parsecomponentid session', session
     qry = session.query(func.max(Components.ID).label('maxid'))
     return getnextid(session, qry)
 
 
-def parsefeatureid(con, table, name, self, dummy):
+def parsefeatureid(con, table, name, self):
     """
 
     :param con:
@@ -168,6 +160,7 @@ def parsefeatureid(con, table, name, self, dummy):
             add_feature = Features(ID=featureid, Name=name, Description=name)
             con.add(add_feature)
             con.commit()
+            self.loadstatus = '{}Adding Feature {}\n'.format(self.loadstatus, name)
         if 'featuresid' not in self.__dict__:
             self.featuresid = []
         self.featuresid.append(featureid)
@@ -181,7 +174,6 @@ def getnextid(session, qry):
     """
     nextid = qry.one()
     session.commit()
-    print "\ngetnextid NextID {}\n".format(nextid)
     data = nextid[0]
     if data is not None:
         return data + 1
@@ -194,36 +186,29 @@ def getcategoryid(con, name):
 
     :param con:
     :param name:
-    :param table:
     :return:
 
     Given a name get the ID. If Name not found return 0
 
     """
-    print '\nGETCATEGORYID:{} session {}\n'.format(name, con)
     try:
-        data = con.query(Categories.ID).filter(Categories.Name==name).one()
+        data = con.query(Categories.ID).filter(Categories.Name == name).one()
         return data[0]
     except NoResultFound:
         return 0
 
 
-def getid(con, name, table):
+def getid(con):
     """
 
     :param con:
-    :param name:
-    :param table:
     :return:
 
     Given a name get the ID. If Name not found return 0
 
     """
-    print '\nGETID:{}\n'.format(name)
     try:
         data = con.one()
-#        print 'qry=', qry
-#        data = qry.one()
         return data[0]
     except NoResultFound:
         return 0
@@ -241,7 +226,7 @@ def adddefinition(con, componentid, categoryid, listorder):
     try:
         data = con.query(Definitions.ComponentID).filter(Definitions.ComponentID == componentid).\
             filter(Definitions.CategoriesID == categoryid).\
-            filter(Definitions.CategoryOrder == listorder)
+            filter(Definitions.CategoryOrder == listorder).one()
         return
     except NoResultFound:
         add_def = Definitions(ComponentID=str(componentid), CategoriesID=str(categoryid),
@@ -251,7 +236,7 @@ def adddefinition(con, componentid, categoryid, listorder):
         return
 
 
-def parsecategoryid(con, table, name, self, dummy):
+def parsecategoryid(con, table, name, self):
     """
 
     :param con:
@@ -259,26 +244,21 @@ def parsecategoryid(con, table, name, self, dummy):
     :param name:
     :return:
     """
-    print 'In parsecategoryid name:<{}>\n'.format(name)
     if name:
         categoryid = getcategoryid(con, name)
-        print 'Parsecategoryid {} con {}'.format(categoryid, con)
         if categoryid == 0:
-            print 'Adding categoryid {}\n'.format(categoryid)
             qry = con.query(func.max(Categories.ID))
             categoryid = getnextid(con,qry)
             add_category = Categories(ID=categoryid, Name=name, Description=name)
             con.add(add_category)
             con.commit()
-            print 'Added category.\n'
-#            categoryid = addstatic(con, table, name)
+            self.loadstatus = '{}Adding Category {}\n'.format(self.loadstatus,name)
         if 'categoriesid' not in self.__dict__:
             self.categoriesid = []
         if 'categorylistorder' not in self.__dict__:
             self.categorylistorder = 0
         self.categoriesid.append(categoryid)
         self.categorylistorder += 1
-        print 'parsecategoryid: adding definition.\n'
         adddefinition(con, self.componentid, categoryid, self.categorylistorder)
         return categoryid
 
@@ -328,13 +308,14 @@ class AddComponent(object):
         self.rowsloaded = rowsloaded
         self.loadstatus = ''
         for column_name, column_value in initial_data:
-            print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
+#            print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
             if not callable(attribute_lookup[column_name][2]):
                 self.__dict__[attribute_lookup[column_name][1]] = column_value
             else:
                 dummy = None
                 self.__dict__[attribute_lookup[column_name][1]] = \
-                    attribute_lookup[column_name][2](session, attribute_lookup[column_name][0], column_value, self, dummy)
+                    attribute_lookup[column_name][2](session, attribute_lookup[column_name][0],
+                                                     column_value, self)
         # Check if the component exists if not create it
         try:
             testid = session.query(Components.ID).\
@@ -430,23 +411,21 @@ class FileLoad(object):
         return 0
 
     def loaddatarows(self, session):
-        nrows = 0
+        self.rows = 0
         status = 0
         for data in self.csvreader:
-            nrows += 1
+            self.rows += 1
             if len(data) != len(self.titles):
                 self.filestatus = '{}Invalid number of columns in data row <{}>\n'.\
-                    format(self.filestatus, nrows)
+                    format(self.filestatus, self.rows)
                 status = ERRInvalidNumCols
             else:
-                print '\nOn row {}\n'.format(nrows)
-                print data
                 comp_object = AddComponent(zip(self.titles, data), session, self.rowsloaded)
                 self.rowsloaded = comp_object.rowsloaded
                 self.filestatus = '{}{}'.\
                     format(self.filestatus, comp_object.loadstatus)
-        self.filestatus = '{}<{}> Data rows successfully loaded.\n'.\
-            format(self.filestatus, self.rowsloaded)
+        self.filestatus = '{}<{}> Data rows successfully loaded. <{}> rows read.\n'.\
+            format(self.filestatus, self.rowsloaded, self.rows)
         return status
 
 
