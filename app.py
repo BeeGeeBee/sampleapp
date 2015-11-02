@@ -28,8 +28,8 @@ def index():
     menu.label.append('List All Components')
     menu.url.append('/showlist/1')
     menu.label.append('Low Stock Report')
-    menu.url.append('/staticmaint')
-    menu.label.append('Static Data Maintenance')
+    menu.url.append('/datamaint')
+    menu.label.append('Data Maintenance')
     return render_template('menu.html', menu=menu, numrows=len(menu.url))
 
 
@@ -236,12 +236,16 @@ def categorysearch(categorylevel=None, categoryid=None):
 
 
 # Static Data Maintenance menu
-@app.route('/staticmaint')
-def staticmaintmenu():
-    menu = HtmlMenu('Stock Static Data Maintenance Menu')
+@app.route('/datamaint')
+def datamaintmenu():
+    menu = HtmlMenu('Stock Data Maintenance Menu')
     menu.url.append('/maintstaticdata/1')
-    menu.label.append('Add/Maintain Locations')
+    menu.label.append('Add/Maintain Components')
     menu.url.append('/maintstaticdata/2')
+    menu.label.append('Add/Maintain Categories')
+    menu.url.append('/maintstaticdata/3')
+    menu.label.append('Add/Maintain Locations')
+    menu.url.append('/maintstaticdata/4')
     menu.label.append('Add/Maintain Suppliers')
     menu.url.append('/fileupload')
     menu.label.append('Upload a CSV formatted file')
@@ -274,9 +278,15 @@ def initstaticform(staticform):
 def maintstaticdata(option=1):
     form = initstaticform(LocationsForm)
     if option == '1':
+        querytable = Components
+        pagetitle = 'Components'
+    elif option == '2':
+        querytable = Categories
+        pagetitle = 'Categories'
+    elif option == '3':
         querytable = Locations
         pagetitle = 'Locations'
-    elif option == '2':
+    elif option == '4':
         querytable = Suppliers
         pagetitle = 'Suppliers'
     else:

@@ -28,23 +28,20 @@ class ComponentsTestCase(unittest.TestCase):
         testsession = createdbsession('sqlite:///testdatabase.db', sqlecho=False, cleardown=True)
         # Initial Populate
         fileload = loadfile('testdata.csv', testsession)
-        print fileload.filestatus
+        assert '<18> Data rows successfully loaded.' in fileload.filestatus
         testsession.close()
-
-
-
 
 # Check Options to
 # list by category
 # list all components
 # low stock report
-# static data maintenance
+# data maintenance
     def test_checkoptions(self):
         rv = self.app.get('/')
         assert 'List By Category' in rv.data
         assert 'List All Components' in rv.data
         assert 'Low Stock Report' in rv.data
-        assert 'Static Data Maintenance' in rv.data
+        assert 'Data Maintenance' in rv.data
 
 
 # Category search into semiconductors to next level
@@ -89,15 +86,33 @@ class ComponentsTestCase(unittest.TestCase):
 # Add/Maintain Suppliers
 # Upload a CSV formatted file
     def test_staticdataoptions(self):
-        rv = self.app.get('/staticmaint')
+        rv = self.app.get('/datamaint')
+        assert 'Add/Maintain Components' in rv.data
+        assert 'Add/Maintain Categories' in rv.data
         assert 'Add/Maintain Locations' in rv.data
         assert 'Add/Maintain Suppliers' in rv.data
         assert 'Upload a CSV formatted file' in rv.data
 
+# Maintain Components
+    def test_maintcomponents(self):
+        rv = self.app.get('/maintstaticdata/1')
+        # Page labelled correctly
+        assert 'Maintain Components' in rv.data
+        # Page displays current components
+        assert 'LED 5mm Green' in rv.data
+
+# Maintain Categories
+    def test_maintcategoriess(self):
+        rv = self.app.get('/maintstaticdata/2')
+        # Page labelled correctly
+        assert 'Maintain Categories' in rv.data
+        # Page displays current locations
+        assert 'Semiconductor' in rv.data
+
 
 # Maintain Locations
     def test_maintlocations(self):
-        rv = self.app.get('/maintstaticdata/1')
+        rv = self.app.get('/maintstaticdata/3')
         # Page labelled correctly
         assert 'Maintain Locations' in rv.data
         # Page displays current locations
@@ -106,7 +121,7 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Maintain Suppliers
     def test_maintsuppliers(self):
-        rv = self.app.get('/maintstaticdata/2')
+        rv = self.app.get('/maintstaticdata/4')
         # Page labelled correctly
         assert 'Maintain Suppliers' in rv.data
         # Page displays current suppliers
@@ -124,10 +139,10 @@ class ComponentsTestCase(unittest.TestCase):
             uploadfile=testfile
         ))
         assert 'Stock Data File Upload Log' in rv.data
-        # If no file given then report it.
+        # If no file to load given then report it.
         response = FileLoad()
         assert 'No filename supplied.' in response.filestatus
-        # If file not found report it.
+        # If file to load not found report it.
         response = FileLoad(testfile)
         assert 'File Not Found. <{}>'.format(testfile) in response.filestatus
         # Set up a session
@@ -142,9 +157,11 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Invalid number of columns in data row <1>' in response.filestatus
         # Report file successfully loaded with the number of rows loaded.
         testfile = 'testdata.csv'
-        response = loadfile(testfile, testsession)
-        assert 'File <{}> successfully loaded.'.format(testfile) in response.filestatus
-        assert '> Data rows successfully loaded.' in response.filestatus
+        rv = self.app.post('/fileupload', data=dict(
+            uploadfile=testfile
+        ))
+        assert 'File &lt;{}&gt; successfully loaded.'.format(testfile) in rv.data
+        assert '&gt; Data rows successfully loaded.' in rv.data
 
 
 if __name__ == '__main__':

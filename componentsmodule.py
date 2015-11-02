@@ -1,11 +1,8 @@
-import sqlite3 as sql
-import os
 import csv
 from sqlalchemy.sql import func
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -135,7 +132,7 @@ def updatelocations(con, column, strvalue, self):
 def parsecomponentid(session, table, name, self):
     """
 
-    :param con:
+    :param session:
     :param table:
     :param name:
     :return:
@@ -248,11 +245,11 @@ def parsecategoryid(con, table, name, self):
         categoryid = getcategoryid(con, name)
         if categoryid == 0:
             qry = con.query(func.max(Categories.ID))
-            categoryid = getnextid(con,qry)
+            categoryid = getnextid(con, qry)
             add_category = Categories(ID=categoryid, Name=name, Description=name)
             con.add(add_category)
             con.commit()
-            self.loadstatus = '{}Adding Category {}\n'.format(self.loadstatus,name)
+            self.loadstatus = '{}Adding Category {}\n'.format(self.loadstatus, name)
         if 'categoriesid' not in self.__dict__:
             self.categoriesid = []
         if 'categorylistorder' not in self.__dict__:
@@ -308,11 +305,10 @@ class AddComponent(object):
         self.rowsloaded = rowsloaded
         self.loadstatus = ''
         for column_name, column_value in initial_data:
-#            print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
+            #print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
             if not callable(attribute_lookup[column_name][2]):
                 self.__dict__[attribute_lookup[column_name][1]] = column_value
             else:
-                dummy = None
                 self.__dict__[attribute_lookup[column_name][1]] = \
                     attribute_lookup[column_name][2](session, attribute_lookup[column_name][0],
                                                      column_value, self)
@@ -383,6 +379,7 @@ class FileLoad(object):
         self.rowsloaded = 0
         self.duplicaterows = 0
         self.csvreader = None
+        self.rows = 0
         if filename is None:
             self.filestatus = 'No filename supplied.'
             self.status = ERRNoFileName
@@ -395,7 +392,6 @@ class FileLoad(object):
                 self.status = ERRNoFileName
             else:
                 self.dbsession = session
-
 
     def loadtitles(self, filep):
         self.csvreader = csv.reader(filep)
