@@ -2,17 +2,29 @@
 {% block title %}Maintain {{statictitle}}{% endblock title %}
 {% block main %}
 <a>Maintain {{statictitle}}</a>
+<script type="text/javascript">
+    function redirect()
+    {
+    var url = "/add/{{option}}"
+    window.location.href=url ;
+    }
+</script>
+{% if option != None %}
+    <button id="addButton" class="float-left submit-button" title="Click to add a new {{option}}" onclick="redirect()">Add</button>
 <table border="1">
     <tr>
-        <th>{{form.name.label}}</th>
-        <th>{{form.description.label}}</th>
+        {% for field in form[-1] %}
+            <th>{{field.label}}</th>
+        {% endfor %}
     </tr>
     {% for row in range(numrows) %}
     <tr>
-        <td>{{form.name.value[row]}}</td>
-        <td>{{form.description.value[row]}}</td>
+        {% for field in form[row-1] %}
+        <td>{{field.value}}</td>
+        {% endfor %}
     </tr>
     {% endfor %}
 </table>
+{% endif %}
 
 {% endblock main %}

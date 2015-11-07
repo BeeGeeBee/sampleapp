@@ -4,9 +4,6 @@ import unittest
 import tempfile
 import StringIO
 from componentsmodule import FileLoad, loadfile, createdbsession
-from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
 
 __author__ = 'bernie'
 
@@ -95,7 +92,7 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Maintain Components
     def test_maintcomponents(self):
-        rv = self.app.get('/maintstaticdata/1')
+        rv = self.app.get('/maintstaticdata/component')
         # Page labelled correctly
         assert 'Maintain Components' in rv.data
         # Page displays current components
@@ -103,7 +100,7 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Maintain Categories
     def test_maintcategoriess(self):
-        rv = self.app.get('/maintstaticdata/2')
+        rv = self.app.get('/maintstaticdata/category')
         # Page labelled correctly
         assert 'Maintain Categories' in rv.data
         # Page displays current locations
@@ -112,7 +109,7 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Maintain Locations
     def test_maintlocations(self):
-        rv = self.app.get('/maintstaticdata/3')
+        rv = self.app.get('/maintstaticdata/location')
         # Page labelled correctly
         assert 'Maintain Locations' in rv.data
         # Page displays current locations
@@ -121,11 +118,22 @@ class ComponentsTestCase(unittest.TestCase):
 
 # Maintain Suppliers
     def test_maintsuppliers(self):
-        rv = self.app.get('/maintstaticdata/4')
+        rv = self.app.get('/maintstaticdata/supplier')
         # Page labelled correctly
         assert 'Maintain Suppliers' in rv.data
         # Page displays current suppliers
         assert 'RapidOnline' in rv.data
+        # Page gives the option to add a supplier
+        assert '"addButton"' in rv.data
+        # Add a supplier
+        rv = self.app.post('/add/supplier', data=dict(
+            name='Test supplier',
+            description='This is a test supplier',
+            website='www.testdata.test'
+        ))
+        assert 'Test supplier' in rv.data
+        assert 'This is a test supplier' in rv.data
+        assert 'www.testdata.test' in rv.data
 
 
 # Upload a CSV formatted file

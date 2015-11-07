@@ -1,14 +1,17 @@
 __author__ = 'Bernard'
 
 from wtforms import Form, BooleanField, TextAreaField, StringField, SubmitField
-from wtforms.validators import Length, required
+from wtforms.validators import Length
 
 
-class ComponentsForm(Form):
+class BasicForm(Form):
+    name = StringField('Name', [Length(min=1, max=50)])
+    description = StringField('Description', [Length(max=250)])
+
+
+class ComponentsForm(BasicForm):
     id = StringField('ID', [Length(max=50)])
-    name = StringField('Name', [Length(max=50)])
     supplier = StringField('Supplier', [Length(max=50)])
-    description = StringField('Description', [Length(max=50)])
     location = StringField('Location', [Length(max=50)])
     sublocation = StringField('Sublocation', [Length(max=50)])
     datasheet = StringField('Datasheet', [Length(max=50)])
@@ -21,8 +24,9 @@ class ComponentsForm(Form):
     feature = StringField('Feature', [Length(max=50)])
 
 
-class LocationsForm(Form):
-    id = StringField('ID', [Length(max=50)])
-    name = StringField('Name', [Length(max=50)])
-    description = StringField('Description', [Length(max=50)])
-    sublocation = StringField('Location', [Length(max=50)])
+class LocationsForm(BasicForm):
+    sublocation = StringField('Sublocation', [Length(max=50)])
+
+
+class SuppliersForm(BasicForm):
+    website = StringField('Website', [Length(max=250)])

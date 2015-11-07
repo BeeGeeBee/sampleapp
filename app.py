@@ -1,9 +1,10 @@
 import os
 from flask import Flask, render_template, request, send_file, redirect, url_for
-from forms import ComponentsForm, LocationsForm
+from forms import ComponentsForm, LocationsForm, SuppliersForm, BasicForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
 from sqlalchemy import func
-from componentsmodule import loadfile, Category, HtmlMenu, createdbsession
+from sqlalchemy.orm.exc import NoResultFound
+from componentsmodule import loadfile, Category, HtmlMenu, createdbsession, getnextid
 
 
 __author__ = 'Bernard'
@@ -239,13 +240,13 @@ def categorysearch(categorylevel=None, categoryid=None):
 @app.route('/datamaint')
 def datamaintmenu():
     menu = HtmlMenu('Stock Data Maintenance Menu')
-    menu.url.append('/maintstaticdata/1')
+    menu.url.append('/maintstaticdata/component')
     menu.label.append('Add/Maintain Components')
-    menu.url.append('/maintstaticdata/2')
+    menu.url.append('/maintstaticdata/category')
     menu.label.append('Add/Maintain Categories')
-    menu.url.append('/maintstaticdata/3')
+    menu.url.append('/maintstaticdata/location')
     menu.label.append('Add/Maintain Locations')
-    menu.url.append('/maintstaticdata/4')
+    menu.url.append('/maintstaticdata/supplier')
     menu.label.append('Add/Maintain Suppliers')
     menu.url.append('/fileupload')
     menu.label.append('Upload a CSV formatted file')
@@ -257,61 +258,145 @@ def createstaticquery(querymodel):
     Build a query object
     :return: orm query object
     """
-    queryobj = session.query(querymodel.ID, querymodel.Name, querymodel.Description). \
+    queryobj = session.query(querymodel). \
         order_by(querymodel.Name)
     return queryobj
 
 
-def initstaticform(staticform):
+def initstaticform(formtemplate = BasicForm):
     """
     Create and then initialise form object with list attributes
     :return:
     """
-    form = staticform()
-    form.name.value = []
-    form.id.value = []
-    form.description.value = []
-    return form
+    return formtemplate()
 
 
-@app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
-def maintstaticdata(option=1):
-    form = initstaticform(LocationsForm)
-    if option == '1':
+def populatelist(option):
+    form = []
+    if option == 'component':
         querytable = Components
         pagetitle = 'Components'
-    elif option == '2':
+    elif option == 'category':
         querytable = Categories
         pagetitle = 'Categories'
-    elif option == '3':
+    elif option == 'location':
         querytable = Locations
         pagetitle = 'Locations'
-    elif option == '4':
+    elif option == 'supplier':
         querytable = Suppliers
         pagetitle = 'Suppliers'
     else:
         querytable = Locations
         pagetitle = 'Invalid Option'
+        option = None
+        form.append(initstaticform())
 
     queryobj = createstaticquery(querytable)
-    for (dataid, name, description)in queryobj:
-        form.id.value.append(dataid)
-        form.name.value.append(name)
-        form.description.value.append('')
-        if description:
-            form.description.value[-1] = description
+    for data_row in queryobj:
+
+        if option == 'component':
+            form.append(initstaticform(ComponentsForm))
+        elif option == 'category':
+            form.append(initstaticform())
+        elif option == 'location':
+            form.append(initstaticform(LocationsForm))
+        elif option == 'supplier':
+            form.append(initstaticform(SuppliersForm))
+            if data_row.Website:
+                form[-1].website.value = data_row.Website
+        form[-1].name.value = data_row.Name
+        if data_row.Description:
+            form[-1].description.value = data_row.Description
+    return option, pagetitle, form
+
+
+@app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
+def maintstaticdata(option='component'):
+    (option, pagetitle, form) = populatelist(option)
     return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                           numrows=len(form.name.value))
+                           numrows=len(form), option=option)
 
 
 @app.route("/fileupload", methods=['GET', 'POST'])
 def fileupload():
     if request.method == 'POST':
         fileload = loadfile(request.form['uploadfile'], session)
-        return render_template('fileloadstatus.html', statustext=fileload.filestatus )
+        return render_template('fileloadstatus.html', statustext=fileload.filestatus)
 
     else:
         return render_template('fileupload.html')
+
+
+def setform(option, request):
+    if option == 'component':
+        form = ComponentsForm(request)
+    elif option == 'category':
+        pass
+    elif option == 'location':
+        form = LocationsForm(request)
+    elif option == 'supplier':
+        form = SuppliersForm(request)
+    else:
+        form = BasicForm()
+    return form
+
+
+def checknew(option, name):
+    if option == 'component':
+        querytable = Components
+    elif option == 'category':
+        querytable = Categories
+    elif option == 'location':
+        querytable = Locations
+    elif option == 'supplier':
+        querytable = Suppliers
+    else:
+        querytable = Locations
+
+    try:
+        session.query(querytable).filter(querytable.Name == name).one()
+        return False
+    except NoResultFound:
+        return True
+
+
+def adddata(option,form):
+    if option == 'component':
+        querytable = Components
+    elif option == 'category':
+        querytable = Categories
+    elif option == 'location':
+        querytable = Locations
+    elif option == 'supplier':
+        qry = session.query(func.max(Suppliers.ID))
+        staticid = getnextid(session, qry)
+        add_supplier = Suppliers(ID=staticid, Name=form.name.data, Description=form.description.data,
+                                 Website=form.website.data)
+        session.add(add_supplier)
+    else:
+        querytable = Locations
+    session.commit()
+
+
+
+@app.route('/add/<option>', methods=['GET', 'POST'])
+def addelement(option=None):
+    form = setform(option, request.form)
+    if request.method == 'POST':
+        if checknew(option, form.name.data):
+            adddata(option, form)
+
+        (option, pagetitle, form) = populatelist(option)
+        return render_template('maintstatic.html', statictitle=pagetitle, form=form,
+                               numrows=len(form), option=option)
+    else:
+        if option == 'supplier':
+            form = SuppliersForm()
+        elif option == 'location':
+            form = LocationsForm()
+        else:
+            form = None
+    return render_template('addelement.html', form=form, statictitle=option)
 
 
 if __name__=='__main__':
