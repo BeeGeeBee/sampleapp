@@ -57,7 +57,12 @@ class Features(Base):
     ID = Column(Integer, primary_key=True)
     Name = Column(String(50))
     Description = Column(String(250))
-    CategoriesID = Column(Integer)
-    ListOrder = Column(Integer)
     StrValue = Column(String(50))
     IntValue = Column(Integer)
+
+
+class DefinedFeatures(Base):
+    __tablename__ = 'definedfeatures'
+    FeatureID = Column(Integer, primary_key=True)
+    CategoriesID = Column(Integer, primary_key=True)
+    ListOrder = Column(Integer, primary_key=True)

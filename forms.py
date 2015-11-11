@@ -1,6 +1,6 @@
 __author__ = 'Bernard'
 
-from wtforms import Form, BooleanField, TextAreaField, StringField, SubmitField
+from wtforms import Form, BooleanField, TextAreaField, StringField, SubmitField, IntegerField
 from wtforms.validators import Length
 
 
@@ -30,3 +30,13 @@ class LocationsForm(BasicForm):
 
 class SuppliersForm(BasicForm):
     website = StringField('Website', [Length(max=250)])
+
+
+class FeaturesForm(BasicForm):
+    strvalue = StringField('String Value', [Length(max=250)])
+    intvalue = IntegerField('Integer Value', [Length(max=10)])
+#    categoriesid = IntegerField('CategoriesID', [Length(max=10)])
+
+
+class CategoriesForm(BasicForm):
+    pass

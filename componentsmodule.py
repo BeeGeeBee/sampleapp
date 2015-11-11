@@ -16,6 +16,9 @@ ERRNoFileName = 1
 ERRFileNotFound = 2
 ERRInvalidTitle = 3
 ERRInvalidNumCols = 4
+ERRSublocBeforeLoc = 5
+ERRValueBeforeFeature = 6
+ERRNoNameCol = 7
 
 
 def createdbsession(dbname=None, sqlecho=None, cleardown=False):
@@ -88,7 +91,7 @@ def getfeatureid(con, name, self):
     """
     try:
         data = con.query(Features.ID).filter(Features.Name == name).\
-            filter(Features.CategoriesID == self.categoriesid[-1]).one()
+            one()
         con.commit()
         return data[0]
     except NoResultFound:
@@ -105,11 +108,9 @@ def updatefeature(con, column, strvalue, self):
     """
     if strvalue:
         if column == 'StrValue':
-            con.query(Features).update({Features.StrValue: strvalue,
-                                        Features.CategoriesID: self.categoriesid[-1]})
+            con.query(Features).update({Features.StrValue: strvalue})
         else:
-            con.query(Features).update({Features.IntValue: strvalue,
-                                        Features.CategoriesID: self.categoriesid[-1]})
+            con.query(Features).update({Features.IntValue: strvalue})
         con.commit()
     return column
 
@@ -206,7 +207,7 @@ def getid(con):
     """
     try:
         data = con.one()
-        return data[0]
+        return data.ID
     except NoResultFound:
         return 0
 
@@ -369,6 +370,301 @@ def filecheck(fn):
         return 0
 
 
+class BaseObject(object):
+    def __init__(self, dbsession, table):
+        self.ID = None
+        self.Name = None
+        self.Description = None
+        self.dbsession = dbsession
+        self.new = None
+        self.table = table
+        self.rowsparsed = 0
+        self.rowsloaded = 0
+
+    def checkcomplete(self):
+        if self.Name is not None and \
+                self.Description is not None:
+            if self.ID is None:
+                self.setid()
+
+    def setid(self):
+        qry = self.dbsession.query(self.table).filter(self.table.Name == self.Name)
+        self.ID = getid(qry)
+        if self.ID == 0:
+            qry = self.dbsession.query(func.max(self.table.ID))
+            self.ID = getnextid(self.dbsession, qry)
+            self.new = True
+#            print '{} New ID is {}\n'.format(self.Name, self.ID)
+        else:
+            self.new = False
+
+    def parsename(self, value):
+        self.Name = value
+        self.checkcomplete()
+
+    def parsedescription(self, value):
+        self.Description = value
+        self.checkcomplete()
+
+
+class SupplierObject(BaseObject):
+    def __init__(self, dbsession, table):
+        BaseObject.__init__(self, dbsession, table)
+        self.Website = None
+
+    def checkcomplete(self):
+        if self.Name is not None and \
+                self.Description is not None and \
+                self.Website is not None:
+            if self.ID is None:
+                self.setid()
+
+    def parsewebsite(self, value):
+        self.Website = value
+        self.checkcomplete()
+
+    def add(self):
+        if self.Description is None:
+            self.Description = self.Name
+        add_supplier = Suppliers(ID=self.ID, Name=self.Name, Description=self.Description,
+                                 Website=self.Website)
+        self.dbsession.add(add_supplier)
+        self.dbsession.commit()
+        return 'Adding supplier {} - {}, {}, {}\n'.format(self.ID, self.Name,
+                                                          self.Description, self.Website)
+
+
+class LocationObject(BaseObject):
+    def __init__(self, dbsession, table):
+        BaseObject.__init__(self, dbsession, table)
+        self.Sublocation = None
+
+    def checkcomplete(self):
+        if self.Name is not None and \
+                self.Description is not None and \
+                self.Sublocation is not None:
+            if self.ID is None:
+                self.setid()
+
+    def parsesublocation(self, value):
+        self.Sublocation = value
+        self.checkcomplete()
+
+    def add(self):
+        if self.Description is None:
+            self.Description = self.Name
+        add_location = Locations(ID=self.ID, Name=self.Name, Description=self.Description,
+                                 Sublocation=self.Sublocation)
+        self.dbsession.add(add_location)
+        self.dbsession.commit()
+        return 'Adding location {} - {}, {}, {}\n'.format(self.ID, self.Name,
+                                                          self.Description, self.Sublocation)
+
+
+class FeatureObject(BaseObject):
+    def __init__(self, dbsession, table):
+        BaseObject.__init__(self, dbsession, table)
+        self.strvalue = None
+        self.intvalue = None
+        self.newname = self.Name
+
+    def setid(self):
+        qry = self.dbsession.query(self.table).filter(self.table.Name == self.Name).\
+            filter(self.table.StrValue == self.strvalue).\
+            filter(self.table.IntValue == self.intvalue)
+        self.ID = getid(qry)
+        if self.ID == 0:
+            qry = self.dbsession.query(func.max(self.table.ID))
+            self.ID = getnextid(self.dbsession, qry)
+            self.new = True
+        else:
+            self.new = False
+
+    def checkcomplete(self):
+        if self.Name is not None and \
+                self.Description is not None:
+            if self.ID is None:
+                self.setid()
+
+    def parsename(self, value):
+        if self.Name is not None:
+            self.newname = value
+        else:
+            self.Name = value
+        return 'Feature'
+
+    def parsestrvalue(self, value):
+        self.strvalue = value
+
+    def parseintvalue(self, value):
+        self.intvalue = value
+
+    def add(self):
+        if self.Description is None:
+            self.Description = self.Name
+        add_feature = Features(ID=self.ID, Name=self.Name, Description=self.Description,
+                                 StrValue=self.strvalue, IntValue=self.intvalue)
+        self.dbsession.add(add_feature)
+        self.dbsession.commit()
+        return 'Adding feature {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
+
+
+class CategoryObject(BaseObject):
+    def __init__(self, dbsession, table):
+        BaseObject.__init__(self, dbsession, table)
+        self.newname = self.Name
+
+    def parsename(self, value):
+        if self.Name is not None:
+            self.newname = value
+        else:
+            self.Name = value
+        return 'Category'
+
+    def add(self):
+        if self.Description is None:
+            self.Description = self.Name
+        add_category = Categories(ID=self.ID, Name=self.Name, Description=self.Description)
+        self.dbsession.add(add_category)
+        self.dbsession.commit()
+        return 'Adding category {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
+
+
+class ComponentObject(BaseObject):
+    def __init__(self, dbsession, table):
+        BaseObject.__init__(self, dbsession, table)
+        self.currentstock = None
+        self.reorderlevel = None
+        self.unitprice = None
+        self.ordercode = None
+        self.datasheet = None
+
+    def checkcomplete(self):
+        if self.Name is not None and \
+                self.Description is not None:
+            if self.ID is None:
+                self.setid()
+
+    def parseid(self, value):
+        self.checkcomplete()
+
+    def parsecurrentstock(self, value):
+        self.currentstock = value
+
+    def parsereorderlevel(self, value):
+        self.reorderlevel = value
+
+    def parseunitprice(self, value):
+        self.unitprice = value
+
+    def parseordercode(self, value):
+        self.ordercode = value
+
+    def parsedatasheet(self, value):
+        self.datasheet = value
+
+    def add(self):
+        if self.Description is None:
+            self.Description = self.Name
+#        add_location = Locations(ID=self.ID, Name=self.Name, Description=self.Description,
+#                                 Sublocation=self.Sublocation)
+#        self.dbsession.add(add_location)
+#        self.dbsession.commit()
+        self.rowsloaded += 1
+        return 'Adding Component {} - {}, {}\n'.format(self.ID, self.Name,\
+                                                          self.Description)
+
+
+class NewComponent(object):
+
+    def __init__(self, fileobject, data):
+        self.fileoject = fileobject
+        self.data = data
+        self.componentid = None
+        self.componentname = None
+        self.description = None
+        self.categoriesid = []
+        self.suppliersid = 0
+        self.currentstock = None
+        self.reorderlevel = None
+        self.locationsid = 0
+        self.datasheet = None
+        self.ordercode = None
+        self.unitprice = None
+        self.rowsloaded = 0
+        self.loadstatus = ''
+        self.categorylist = []
+        self.featurelist = []
+        self.component = ComponentObject(fileobject.dbsession, Components)
+        self.category = CategoryObject(fileobject.dbsession, Categories)
+        self.feature = FeatureObject(fileobject.dbsession, Features)
+        self.location = LocationObject(fileobject.dbsession, Locations)
+        self.supplier = SupplierObject(fileobject.dbsession, Suppliers)
+        # this attribute is a dictionary of which object methods to use with which label
+        self.attrib = {'Supplier': (self.supplier.parsename),
+                       'Supplier Description': (self.supplier.parsedescription),
+                       'Website': (self.supplier.parsewebsite),
+                       'Location': (self.location.parsename),
+                       'Location Description': (self.location.parsedescription),
+                       'Sublocation': (self.location.parsesublocation),
+                       'Category': self.category.parsename,
+                       'Category Description': self.category.parsedescription,
+                       'Feature': self.feature.parsename,
+                       'Feature Description': self.feature.parsedescription,
+                       'StrValue': self.feature.parsestrvalue,
+                       'IntValue': self.feature.parseintvalue,
+                       'Name': self.component.parsename,
+                       'ID': self.component.parseid,
+                       'Description': self.component.parsedescription,
+                       'UnitPrice': self.component.parseunitprice,
+                       'CurrentStock': self.component.parsecurrentstock,
+                       'ReorderLevel': self.component.parsereorderlevel,
+                       'OrderCode': self.component.parseordercode,
+                       'Datasheet': self.component.parsedatasheet
+                       }
+
+    def checkid(self, obj):
+        if obj.ID is None:
+            if obj.Name is not None:
+                obj.setid()
+        if obj.new:
+            return obj.add()
+        return
+
+    def parsedata(self):
+        # Step through the data and load the various attributes
+        logstatus = ''
+        for column, value in zip(self.fileoject.titles,self.data):
+            try:
+                status = self.attrib[column](value)
+                if status == 'Feature':
+                    if self.feature.newname is not None:
+                        checkstatus = self.checkid(self.feature)
+                        if checkstatus is not None:
+                            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+                        self.featurelist.append(self.feature.ID)
+                        self.feature.__init__(self.fileoject.dbsession, Features)
+                        self.feature.Name = value
+                elif status == 'Category':
+                    if self.category.newname is not None:
+                        checkstatus = self.checkid(self.category)
+                        if checkstatus is not None:
+                            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+                        self.categorylist.append(self.category.ID)
+                        self.category.__init__(self.fileoject.dbsession, Categories)
+                        self.category.Name = value
+            except KeyError:
+                pass
+        checkstatus = self.checkid(self.location)
+        if checkstatus is not None:
+            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+        checkstatus = self.checkid(self.supplier)
+        if checkstatus is not None:
+            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+        self.rowsloaded += self.component.rowsloaded
+        return logstatus
+
+
 class FileLoad(object):
 
     def __init__(self, filename=None, session=None):
@@ -396,6 +692,7 @@ class FileLoad(object):
     def loadtitles(self, filep):
         self.csvreader = csv.reader(filep)
         self.titles = self.csvreader.next()
+        # Check for valid column titles
         for title in self.titles:
             try:
                 test = attribute_lookup[title]
@@ -404,6 +701,46 @@ class FileLoad(object):
                 self.filestatus = '{}Invalid column header <{}>\n'.\
                     format(self.filestatus, title)
                 return ERRInvalidTitle
+        # Must always have a Name column
+        try:
+            locationindex = self.titles.index('Name')
+        except ValueError:
+            self.filestatus = '{}Row must always contain a name column.\n'.\
+                    format(self.filestatus)
+            return ERRNoNameCol
+
+        # Location must always have been declared before any sublocations
+        try:
+            locationindex = self.titles.index('Location')
+        except ValueError:
+            locationindex = len(self.titles) + 1
+        try:
+            sublocindex = self.titles.index('Sublocation')
+        except ValueError:
+            sublocindex = -1
+        if (sublocindex < locationindex) and (sublocindex >= 0):
+                self.filestatus = '{}Sublocation declared before location.\n'.\
+                    format(self.filestatus)
+                return ERRSublocBeforeLoc
+
+        # Feature must always have been declared before any strvalues or intvalues
+        try:
+            featureindex = self.titles.index('Feature')
+        except ValueError:
+            featureindex = len(self.titles) + 1
+        try:
+            strvalueindex = self.titles.index('StrValue')
+        except ValueError:
+            strvalueindex = -1
+        try:
+            intvalueindex = self.titles.index('IntValue')
+        except ValueError:
+            intvalueindex = -1
+        if ((strvalueindex < featureindex) and (strvalueindex >= 0))\
+                or ((intvalueindex < featureindex) and (intvalueindex >= 0)) :
+                self.filestatus = '{}Strvalue or Intvalue declared before any feature.\n'.\
+                    format(self.filestatus)
+                return ERRValueBeforeFeature
         return 0
 
     def loaddatarows(self, session):
@@ -416,10 +753,15 @@ class FileLoad(object):
                     format(self.filestatus, self.rows)
                 status = ERRInvalidNumCols
             else:
-                comp_object = AddComponent(zip(self.titles, data), session, self.rowsloaded)
-                self.rowsloaded = comp_object.rowsloaded
+                new_object = NewComponent(self, data)
+#                print new_object.parsedata()
+#                comp_object = AddComponent(zip(self.titles, data), session, self.rowsloaded)
+#                self.rowsloaded = comp_object.rowsloaded
+                loadstatus = new_object.parsedata()
                 self.filestatus = '{}{}'.\
-                    format(self.filestatus, comp_object.loadstatus)
+                    format(self.filestatus, loadstatus)
+                new_object.component.add()
+                self.rowsloaded += new_object.component.rowsloaded
         self.filestatus = '{}<{}> Data rows successfully loaded. <{}> rows read.\n'.\
             format(self.filestatus, self.rowsloaded, self.rows)
         return status
