@@ -28,7 +28,7 @@ class Components(Base):
     ID = Column(Integer, primary_key=True)
     Name = Column(String(50))
     Description = Column(String(250))
-    CategoriesID = Column(Integer, primary_key=True)
+    CategoriesID = Column(Integer)
     SuppliersID = Column(Integer, primary_key=True)
     CurrentStock = Column(Integer)
     ReorderLevel = Column(Integer)
@@ -63,6 +63,6 @@ class Features(Base):
 
 class DefinedFeatures(Base):
     __tablename__ = 'definedfeatures'
+    ComponentID = Column(Integer, primary_key=True)
     FeatureID = Column(Integer, primary_key=True)
-    CategoriesID = Column(Integer, primary_key=True)
     ListOrder = Column(Integer, primary_key=True)

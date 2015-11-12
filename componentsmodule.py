@@ -1,6 +1,7 @@
 import csv
 from sqlalchemy.sql import func
-from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
+from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features,\
+    DefinedFeatures
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
@@ -36,139 +37,12 @@ def createdbsession(dbname=None, sqlecho=None, cleardown=False):
     return session
 
 
-def parsesupplier(con, table, name, self):
-    """
-
-    :rtype : object
-    :param con:
-    :param table:
-    :param name:
-    :return: integer
-    """
-    staticid = 0
-    if name:
-        qry = con.query(Suppliers.ID).filter(Suppliers.Name == name)
-        staticid = getid(qry)
-        if staticid == 0:
-            qry = con.query(func.max(Suppliers.ID))
-            staticid = getnextid(con, qry)
-            add_supplier = Suppliers(ID=staticid, Name=name, Description=name)
-            con.add(add_supplier)
-            con.commit()
-            self.loadstatus = '{}Adding Supplier {}\n'.format(self.loadstatus, name)
-    return staticid
-
-
-def parselocation(con, table, name, self):
-    """
-
-    :rtype : object
-    :param con:
-    :param table:
-    :param name:
-    :return: integer
-    """
-    staticid = 0
-    if name:
-        qry = con.query(Locations.ID).filter(Locations.Name == name)
-        staticid = getid(qry)
-        if staticid == 0:
-            qry = con.query(func.max(Locations.ID))
-            staticid = getnextid(con, qry)
-            add_location = Locations(ID=staticid, Name=name, Description=name)
-            con.add(add_location)
-            con.commit()
-            self.loadstatus = '{}Adding Location {}\n'.format(self.loadstatus, name)
-    return staticid
-
-
-def getfeatureid(con, name, self):
-    """
-        Get a feature id so use categoryid as well as name.
-    :param con:
-    :param name:
-    :return:
-    """
-    try:
-        data = con.query(Features.ID).filter(Features.Name == name).\
-            one()
-        con.commit()
-        return data[0]
-    except NoResultFound:
-        return 0
-
-
-def updatefeature(con, column, strvalue, self):
-    """
-
-    :param con:
-    :param column:
-    :param strvalue:
-    :return:
-    """
-    if strvalue:
-        if column == 'StrValue':
-            con.query(Features).update({Features.StrValue: strvalue})
-        else:
-            con.query(Features).update({Features.IntValue: strvalue})
-        con.commit()
-    return column
-
-
-def updatelocations(con, column, strvalue, self):
-    """
-
-    :param con:
-    :param column:
-    :param strvalue:
-    :return:
-    """
-    if strvalue:
-        con.query(Locations).update({Locations.Sublocation: strvalue})
-        con.commit()
-        self.loadstatus = '{}Adding Sublocation {}\n'.format(self.loadstatus, strvalue)
-    return column
-
-
-def parsecomponentid(session, table, name, self):
-    """
-
-    :param session:
-    :param table:
-    :param name:
-    :return:
-    """
-    qry = session.query(func.max(Components.ID).label('maxid'))
-    return getnextid(session, qry)
-
-
-def parsefeatureid(con, table, name, self):
-    """
-
-    :param con:
-    :param table:
-    :param name:
-    :return:
-    """
-    if name:
-        featureid = getfeatureid(con, name, self)
-        if featureid == 0:
-            qry = con.query(func.max(Features.ID))
-            featureid = getnextid(con, qry)
-            add_feature = Features(ID=featureid, Name=name, Description=name)
-            con.add(add_feature)
-            con.commit()
-            self.loadstatus = '{}Adding Feature {}\n'.format(self.loadstatus, name)
-        if 'featuresid' not in self.__dict__:
-            self.featuresid = []
-        self.featuresid.append(featureid)
-        return featureid
-
-
 def getnextid(session, qry):
     """
-
-    :rtype : integer
+    Get the next ID value.
+    :param session: Database session object.
+    :param qry: ORM query object to get the ID
+    :return: Return an incremented ID or 1 if no IDs are defined.
     """
     nextid = qry.one()
     session.commit()
@@ -179,28 +53,11 @@ def getnextid(session, qry):
         return 1
 
 
-def getcategoryid(con, name):
-    """
-
-    :param con:
-    :param name:
-    :return:
-
-    Given a name get the ID. If Name not found return 0
-
-    """
-    try:
-        data = con.query(Categories.ID).filter(Categories.Name == name).one()
-        return data[0]
-    except NoResultFound:
-        return 0
-
-
 def getid(con):
     """
 
-    :param con:
-    :return:
+    :param con: Database ORM query object.
+    :return: return the ID or 0.
 
     Given a name get the ID. If Name not found return 0
 
@@ -212,132 +69,87 @@ def getid(con):
         return 0
 
 
-def adddefinition(con, componentid, categoryid, listorder):
-    """
-    Add a new definition to the definitions table
-    :param con:
-    :param componentid:
-    :param categoryid:
-    :param listorder:
-    :return:
-    """
-    try:
-        data = con.query(Definitions.ComponentID).filter(Definitions.ComponentID == componentid).\
-            filter(Definitions.CategoriesID == categoryid).\
-            filter(Definitions.CategoryOrder == listorder).one()
-        return
-    except NoResultFound:
-        add_def = Definitions(ComponentID=str(componentid), CategoriesID=str(categoryid),
-                              CategoryOrder=str(listorder))
-        con.add(add_def)
-        con.commit()
-        return
-
-
-def parsecategoryid(con, table, name, self):
-    """
-
-    :param con:
-    :param table:
-    :param name:
-    :return:
-    """
-    if name:
-        categoryid = getcategoryid(con, name)
-        if categoryid == 0:
-            qry = con.query(func.max(Categories.ID))
-            categoryid = getnextid(con, qry)
-            add_category = Categories(ID=categoryid, Name=name, Description=name)
-            con.add(add_category)
-            con.commit()
-            self.loadstatus = '{}Adding Category {}\n'.format(self.loadstatus, name)
-        if 'categoriesid' not in self.__dict__:
-            self.categoriesid = []
-        if 'categorylistorder' not in self.__dict__:
-            self.categorylistorder = 0
-        self.categoriesid.append(categoryid)
-        self.categorylistorder += 1
-        adddefinition(con, self.componentid, categoryid, self.categorylistorder)
-        return categoryid
-
-
-attribute_lookup = {'Supplier': ('Suppliers', 'supplierid', parsesupplier),
-                    'Location': ('Locations', 'locationid', parselocation),
-                    'Name': ('Components', 'componentname', ''),
-                    'ID': ('Components.ID', 'componentid', parsecomponentid),
-                    'Description': ('Components', 'description', ''),
-                    'UnitPrice': ('Components', 'unitprice', 0.0),
-                    'Feature': ('Features', 'features', parsefeatureid),
-                    'Category': ('Categories.ID', 'categories', parsecategoryid),
-                    'Sublocation': ('Locations', 'sublocation', updatelocations),
-                    'CurrentStock': ('Components', 'currentstock', 0),
-                    'ReorderLevel': ('Components', 'reorderlevel', 0),
-                    'OrderCode': ('Components', 'ordercode', ''),
-                    'Website': ('Components', 'website', ''),
-                    'StrValue': ('StrValue', 'strvalue', updatefeature),
-                    'IntValue': ('IntValue', 'intvalue', updatefeature),
-                    'Datasheet': ('Components', 'datasheet', '')}
-
-
-class AddComponent(object):
-    """
-
-    Class to contain a component definition and provide interface.
-
-    """
-
-    def __init__(self, initial_data, session, rowsloaded):
-        """
-
-        :param initial_data:
-        :return:
-        """
-        self.componentid = None
-        self.componentname = None
-        self.description = None
-        self.categoriesid = []
-        self.suppliersid = 0
-        self.currentstock = None
-        self.reorderlevel = None
-        self.locationsid = 0
-        self.datasheet = None
-        self.ordercode = None
-        self.unitprice = None
-        self.rowsloaded = rowsloaded
-        self.loadstatus = ''
-        for column_name, column_value in initial_data:
-            #print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
-            if not callable(attribute_lookup[column_name][2]):
-                self.__dict__[attribute_lookup[column_name][1]] = column_value
-            else:
-                self.__dict__[attribute_lookup[column_name][1]] = \
-                    attribute_lookup[column_name][2](session, attribute_lookup[column_name][0],
-                                                     column_value, self)
-        # Check if the component exists if not create it
-        try:
-            testid = session.query(Components.ID).\
-                filter(Components.Name == self.componentname).\
-                filter(Components.CategoriesID == self.categoriesid[0]).\
-                filter(Components.SuppliersID == self.suppliersid).\
-                filter(Components.LocationsID == self.locationsid).one()
-            self.loadstatus = '{}{} already exists for this supplier and location.\n'.\
-                format(self.loadstatus, self.componentname)
-
-        except NoResultFound:
-            new_component = Components(ID=self.componentid, Name=self.componentname,
-                                       Description=self.description,
-                                       CategoriesID=self.categoriesid[0], SuppliersID=self.suppliersid,
-                                       CurrentStock=self.currentstock, ReorderLevel=self.reorderlevel,
-                                       LocationsID=self.locationsid, Datasheet=self.datasheet,
-                                       OrderCode=self.ordercode, UnitPrice=self.unitprice)
-            session.add(new_component)
-            self.rowsloaded += 1
-            self.loadstatus = '{}{} added.\n'.\
-                format(self.loadstatus, self.componentname)
-
-        session.commit()
-
-
+# def adddefinition(con, componentid, categoryid, listorder):
+#     """
+#     Add a new definition to the definitions table
+#     :param con:
+#     :param componentid:
+#     :param categoryid:
+#     :param listorder:
+#     :return:
+#     """
+#     try:
+#         data = con.query(Definitions.ComponentID).filter(Definitions.ComponentID == componentid).\
+#             filter(Definitions.CategoriesID == categoryid).\
+#             filter(Definitions.CategoryOrder == listorder).one()
+#         return
+#     except NoResultFound:
+#         add_def = Definitions(ComponentID=str(componentid), CategoriesID=str(categoryid),
+#                               CategoryOrder=str(listorder))
+#         con.add(add_def)
+#         con.commit()
+#         return
+#
+#
+# class AddComponent(object):
+#     """
+#
+#     Class to contain a component definition and provide interface.
+#
+#     """
+#
+#     def __init__(self, initial_data, session, rowsloaded):
+#         """
+#
+#         :param initial_data:
+#         :return:
+#         """
+#         self.componentid = None
+#         self.componentname = None
+#         self.description = None
+#         self.categoriesid = []
+#         self.suppliersid = 0
+#         self.currentstock = None
+#         self.reorderlevel = None
+#         self.locationsid = 0
+#         self.datasheet = None
+#         self.ordercode = None
+#         self.unitprice = None
+#         self.rowsloaded = rowsloaded
+#         self.loadstatus = ''
+#         for column_name, column_value in initial_data:
+#             #print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
+#             if not callable(attribute_lookup[column_name][2]):
+#                 self.__dict__[attribute_lookup[column_name][1]] = column_value
+#             else:
+#                 self.__dict__[attribute_lookup[column_name][1]] = \
+#                     attribute_lookup[column_name][2](session, attribute_lookup[column_name][0],
+#                                                      column_value, self)
+#         # Check if the component exists if not create it
+#         try:
+#             testid = session.query(Components.ID).\
+#                 filter(Components.Name == self.componentname).\
+#                 filter(Components.CategoriesID == self.categoriesid[0]).\
+#                 filter(Components.SuppliersID == self.suppliersid).\
+#                 filter(Components.LocationsID == self.locationsid).one()
+#             self.loadstatus = '{}{} already exists for this supplier and location.\n'.\
+#                 format(self.loadstatus, self.componentname)
+#
+#         except NoResultFound:
+#             new_component = Components(ID=self.componentid, Name=self.componentname,
+#                                        Description=self.description,
+#                                        CategoriesID=self.categoriesid[0], SuppliersID=self.suppliersid,
+#                                        CurrentStock=self.currentstock, ReorderLevel=self.reorderlevel,
+#                                        LocationsID=self.locationsid, Datasheet=self.datasheet,
+#                                        OrderCode=self.ordercode, UnitPrice=self.unitprice)
+#             session.add(new_component)
+#             self.rowsloaded += 1
+#             self.loadstatus = '{}{} added.\n'.\
+#                 format(self.loadstatus, self.componentname)
+#
+#         session.commit()
+#
+#
 class Category(object):
     """
     Define Category class to keep track of category searches
@@ -381,12 +193,6 @@ class BaseObject(object):
         self.rowsparsed = 0
         self.rowsloaded = 0
 
-    def checkcomplete(self):
-        if self.Name is not None and \
-                self.Description is not None:
-            if self.ID is None:
-                self.setid()
-
     def setid(self):
         qry = self.dbsession.query(self.table).filter(self.table.Name == self.Name)
         self.ID = getid(qry)
@@ -400,11 +206,9 @@ class BaseObject(object):
 
     def parsename(self, value):
         self.Name = value
-        self.checkcomplete()
 
     def parsedescription(self, value):
         self.Description = value
-        self.checkcomplete()
 
 
 class SupplierObject(BaseObject):
@@ -480,12 +284,6 @@ class FeatureObject(BaseObject):
         else:
             self.new = False
 
-    def checkcomplete(self):
-        if self.Name is not None and \
-                self.Description is not None:
-            if self.ID is None:
-                self.setid()
-
     def parsename(self, value):
         if self.Name is not None:
             self.newname = value
@@ -503,7 +301,7 @@ class FeatureObject(BaseObject):
         if self.Description is None:
             self.Description = self.Name
         add_feature = Features(ID=self.ID, Name=self.Name, Description=self.Description,
-                                 StrValue=self.strvalue, IntValue=self.intvalue)
+                               StrValue=self.strvalue, IntValue=self.intvalue)
         self.dbsession.add(add_feature)
         self.dbsession.commit()
         return 'Adding feature {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
@@ -538,15 +336,42 @@ class ComponentObject(BaseObject):
         self.unitprice = None
         self.ordercode = None
         self.datasheet = None
+        self.locationsid = 0
+        self.suppliersid = 0
+        self.categoriesid = []
+        self.featuresid = []
+        self.new = None
 
-    def checkcomplete(self):
-        if self.Name is not None and \
-                self.Description is not None:
-            if self.ID is None:
-                self.setid()
+    def setid(self):
+        qry = self.dbsession.query(self.table.ID).filter(self.table.Name == self.Name).\
+            filter(self.table.LocationsID == self.locationsid).\
+            filter(self.table.SuppliersID == self.suppliersid).\
+            filter(self.table.CategoriesID == self.categoriesid[0])
+        self.ID = getid(qry)
+        if self.ID == 0:
+            qry = self.dbsession.query(func.max(self.table.ID))
+            self.ID = getnextid(self.dbsession, qry)
+            self.new = True
+        else:
+            self.new = False
+
+    def parsename(self, value):
+        self.Name = value
+        # See if a category already exists for this name
+        try:
+            categoriesid = self.dbsession.query(Categories.ID).\
+                filter(Categories.Name == self.Name).one()
+        except NoResultFound:
+            category = CategoryObject(self.dbsession, Categories)
+            category.parsename(value)
+            qry = self.dbsession.query(func.max(Categories.ID))
+            category.ID = getnextid(self.dbsession, qry)
+            category.add()
+            self.categoriesid.append(category.ID)
+            return 'Component'
 
     def parseid(self, value):
-        self.checkcomplete()
+        pass
 
     def parsecurrentstock(self, value):
         self.currentstock = value
@@ -566,13 +391,18 @@ class ComponentObject(BaseObject):
     def add(self):
         if self.Description is None:
             self.Description = self.Name
-#        add_location = Locations(ID=self.ID, Name=self.Name, Description=self.Description,
-#                                 Sublocation=self.Sublocation)
-#        self.dbsession.add(add_location)
-#        self.dbsession.commit()
+        add_component = Components(ID=self.ID, Name=self.Name, Description=self.Description,
+                                   CategoriesID=self.categoriesid[0], SuppliersID=self.suppliersid,
+                                   CurrentStock=self.currentstock, ReorderLevel=self.reorderlevel,
+                                   LocationsID=self.locationsid, Datasheet=self.datasheet,
+                                   OrderCode=self.ordercode, UnitPrice=self.unitprice)
+        self.dbsession.add(add_component)
+        self.dbsession.commit()
         self.rowsloaded += 1
-        return 'Adding Component {} - {}, {}\n'.format(self.ID, self.Name,\
-                                                          self.Description)
+        return 'Adding Component {} - {}, {} {} {}\n'.format(self.ID, self.Name,
+                                                             self.Description,
+                                                             self.suppliersid,
+                                                             self.locationsid)
 
 
 class NewComponent(object):
@@ -601,12 +431,12 @@ class NewComponent(object):
         self.location = LocationObject(fileobject.dbsession, Locations)
         self.supplier = SupplierObject(fileobject.dbsession, Suppliers)
         # this attribute is a dictionary of which object methods to use with which label
-        self.attrib = {'Supplier': (self.supplier.parsename),
-                       'Supplier Description': (self.supplier.parsedescription),
-                       'Website': (self.supplier.parsewebsite),
-                       'Location': (self.location.parsename),
-                       'Location Description': (self.location.parsedescription),
-                       'Sublocation': (self.location.parsesublocation),
+        self.attrib = {'Supplier': self.supplier.parsename,
+                       'Supplier Description': self.supplier.parsedescription,
+                       'Website': self.supplier.parsewebsite,
+                       'Location': self.location.parsename,
+                       'Location Description': self.location.parsedescription,
+                       'Sublocation': self.location.parsesublocation,
                        'Category': self.category.parsename,
                        'Category Description': self.category.parsedescription,
                        'Feature': self.feature.parsename,
@@ -634,7 +464,7 @@ class NewComponent(object):
     def parsedata(self):
         # Step through the data and load the various attributes
         logstatus = ''
-        for column, value in zip(self.fileoject.titles,self.data):
+        for column, value in zip(self.fileoject.titles, self.data):
             try:
                 status = self.attrib[column](value)
                 if status == 'Feature':
@@ -653,6 +483,8 @@ class NewComponent(object):
                         self.categorylist.append(self.category.ID)
                         self.category.__init__(self.fileoject.dbsession, Categories)
                         self.category.Name = value
+                elif status == 'Component':
+                    self.categorylist.append(self.component.categoriesid[0])
             except KeyError:
                 pass
         checkstatus = self.checkid(self.location)
@@ -661,7 +493,30 @@ class NewComponent(object):
         checkstatus = self.checkid(self.supplier)
         if checkstatus is not None:
             logstatus = '{}{}\n'.format(logstatus, checkstatus)
+        self.component.suppliersid = self.supplier.ID
+        self.component.locationsid = self.location.ID
+        checkstatus = self.checkid(self.component)
+        if checkstatus is not None:
+            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+        # Add the category definitions
+        listorder = 0
+        for categoryid in self.categorylist:
+            listorder += 1
+            add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
+                                         CategoryOrder=listorder)
+            self.fileoject.dbsession.add(add_definition)
+            print 'Adding definition {} {} {}'.format(self.component.ID, categoryid, listorder)
+        # Add the features
+        listorder = 0
+        for featureid in self.featurelist:
+            listorder += 1
+            add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
+                                             ListOrder=listorder)
+            self.fileoject.dbsession.add(add_definition)
+            print 'Adding feature definition {} {} {}'.format(self.component.ID, featureid, listorder)
+        self.fileoject.dbsession.commit()
         self.rowsloaded += self.component.rowsloaded
+#        print logstatus,
         return logstatus
 
 
@@ -692,10 +547,11 @@ class FileLoad(object):
     def loadtitles(self, filep):
         self.csvreader = csv.reader(filep)
         self.titles = self.csvreader.next()
+        checkcomponent = NewComponent(self, self.titles)
         # Check for valid column titles
         for title in self.titles:
             try:
-                test = attribute_lookup[title]
+                test = checkcomponent.attrib[title]
 
             except KeyError:
                 self.filestatus = '{}Invalid column header <{}>\n'.\
@@ -737,7 +593,7 @@ class FileLoad(object):
         except ValueError:
             intvalueindex = -1
         if ((strvalueindex < featureindex) and (strvalueindex >= 0))\
-                or ((intvalueindex < featureindex) and (intvalueindex >= 0)) :
+                or ((intvalueindex < featureindex) and (intvalueindex >= 0)):
                 self.filestatus = '{}Strvalue or Intvalue declared before any feature.\n'.\
                     format(self.filestatus)
                 return ERRValueBeforeFeature
@@ -754,13 +610,9 @@ class FileLoad(object):
                 status = ERRInvalidNumCols
             else:
                 new_object = NewComponent(self, data)
-#                print new_object.parsedata()
-#                comp_object = AddComponent(zip(self.titles, data), session, self.rowsloaded)
-#                self.rowsloaded = comp_object.rowsloaded
                 loadstatus = new_object.parsedata()
                 self.filestatus = '{}{}'.\
                     format(self.filestatus, loadstatus)
-                new_object.component.add()
                 self.rowsloaded += new_object.component.rowsloaded
         self.filestatus = '{}<{}> Data rows successfully loaded. <{}> rows read.\n'.\
             format(self.filestatus, self.rowsloaded, self.rows)
