@@ -359,8 +359,9 @@ class ComponentObject(BaseObject):
         self.Name = value
         # See if a category already exists for this name
         try:
-             categoriesid = self.dbsession.query(Categories.ID).\
-                 filter(Categories.Name == self.Name).one()
+             found = self.dbsession.query(Categories.ID).\
+                 filter(Categories.Name == self.Name).count()
+             self.New = False
         except NoResultFound:
              category = CategoryObject(self.dbsession, Categories)
              category.parsename(value)
@@ -497,31 +498,35 @@ class NewComponent(object):
         checkstatus = self.checkid(self.component)
         if checkstatus is not None:
             logstatus = '{}{}'.format(logstatus, checkstatus)
-        # Add the category definitions
-        self.category.__init__(self.fileoject.dbsession, Categories)
-        self.category.parsename(self.component.Name)
-        self.category.add()
-        self.categorylist.append(self.category.ID)
-        listorder = 0
-        for categoryid in self.categorylist:
-            if categoryid is not None:
-                listorder += 1
-                add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
-                                             CategoryOrder=listorder)
-                self.fileoject.dbsession.add(add_definition)
-                self.fileoject.filestatus =  '{}Adding definition {} {} {}\n'.\
-                    format(self.fileoject.filestatus, self.component.ID, categoryid, listorder)
-            # print self.fileoject.filestatus
-        # Add the features
-        listorder = 0
-        for featureid in self.featurelist:
-            if featureid is not None:
-                listorder += 1
-                add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
-                                                 ListOrder=listorder)
-                self.fileoject.dbsession.add(add_definition)
-                self.fileoject.filestatus =  '{}Adding feature definition {} {} {}\n'.\
-                    format(self.fileoject.filestatus, self.component.ID, featureid, listorder)
+        if self.component.new:
+            # Add the category definitions
+            self.category.__init__(self.fileoject.dbsession, Categories)
+            self.category.parsename(self.component.Name)
+            self.fileoject.filestatus = '{}{}'.format(self.fileoject.filestatus, self.checkid(self.category))
+            self.categorylist.append(self.category.ID)
+            listorder = 0
+            for categoryid in self.categorylist:
+                if categoryid is not None:
+                    listorder += 1
+                    add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
+                                                 CategoryOrder=listorder)
+                    self.fileoject.dbsession.add(add_definition)
+                    self.fileoject.filestatus =  '{}Adding definition {} {} {}\n'.\
+                        format(self.fileoject.filestatus, self.component.ID, categoryid, listorder)
+                # print self.fileoject.filestatus
+            # Add the features
+            listorder = 0
+            for featureid in self.featurelist:
+                if featureid is not None:
+                    listorder += 1
+                    add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
+                                                     ListOrder=listorder)
+                    self.fileoject.dbsession.add(add_definition)
+                    self.fileoject.filestatus =  '{}Adding feature definition {} {} {}\n'.\
+                        format(self.fileoject.filestatus, self.component.ID, featureid, listorder)
+        else:
+            self.fileoject.filestatus =  '{}Component {} already exists.\n'.\
+                format(self.fileoject.filestatus, self.component.Name)
         self.fileoject.dbsession.commit()
         self.rowsloaded += self.component.rowsloaded
 #        print logstatus,

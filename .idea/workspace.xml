@@ -5,10 +5,8 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/database/components.db" afterPath="$PROJECT_DIR$/database/components.db" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testdatabase.db" afterPath="$PROJECT_DIR$/testdatabase.db" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app.py" afterPath="$PROJECT_DIR$/app.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app_test.py" afterPath="$PROJECT_DIR$/app_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/componentsmodule.py" afterPath="$PROJECT_DIR$/componentsmodule.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/base.html" afterPath="$PROJECT_DIR$/templates/base.html" />
     </list>
     <ignored path="Components.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,8 +52,8 @@
       <file leaf-file-name="componentsmodule.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/componentsmodule.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-3.2413793">
-              <caret line="526" column="14" selection-start-line="526" selection-start-column="9" selection-end-line="526" selection-end-column="14" />
+            <state vertical-scroll-proportion="-8.931034">
+              <caret line="532" column="24" selection-start-line="532" selection-start-column="24" selection-end-line="532" selection-end-column="24" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -63,11 +61,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="app_test.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="app_test.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.84294873">
+              <caret line="55" column="28" selection-start-line="55" selection-start-column="28" selection-end-line="55" selection-end-column="28" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -75,10 +73,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="app.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="app.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.33215547">
+            <state vertical-scroll-proportion="-3.2413793">
               <caret line="433" column="23" selection-start-line="433" selection-start-column="15" selection-end-line="433" selection-end-column="23" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
@@ -140,9 +138,9 @@
         <option value="$PROJECT_DIR$/forms.py" />
         <option value="$PROJECT_DIR$/models.py" />
         <option value="$PROJECT_DIR$/templates/base.html" />
+        <option value="$PROJECT_DIR$/app.py" />
         <option value="$PROJECT_DIR$/componentsmodule.py" />
         <option value="$PROJECT_DIR$/app_test.py" />
-        <option value="$PROJECT_DIR$/app.py" />
       </list>
     </option>
   </component>
@@ -593,16 +591,16 @@
       <option name="project" value="LOCAL" />
       <updated>1447294868018</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Refactor for ORM 3. Working version.">
+      <created>1447438352758</created>
+      <option name="number" value="00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1447438352758</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.12 at 02h 02m 29s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.12 at 02h 03m 11s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
     <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.13 at 17h 43m 42s.xml">
       <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
     </history-entry>
@@ -627,6 +625,12 @@
     <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.13 at 18h 11m 27s.xml">
       <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
     </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.13 at 20h 10m 34s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.11.13 at 20h 12m 00s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
   </component>
   <component name="TodoView" selected-index="4">
     <todo-panel id="selected-file">
@@ -648,7 +652,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.44970414" sideWeight="0.49609375" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32806325" sideWeight="0.5058594" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32806325" sideWeight="0.5058594" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -714,7 +718,8 @@
     <MESSAGE value="Add suppliers done." />
     <MESSAGE value="Refactor for ORM." />
     <MESSAGE value="Refactor for ORM 2." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactor for ORM 2." />
+    <MESSAGE value="Refactor for ORM 3. Working version." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor for ORM 3. Working version." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1089,10 +1094,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app_test.py">
+    <entry file="file://$PROJECT_DIR$/app.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+        <state vertical-scroll-proportion="-3.2413793">
+          <caret line="433" column="23" selection-start-line="433" selection-start-column="15" selection-end-line="433" selection-end-column="23" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -1101,18 +1106,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/componentsmodule.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-3.2413793">
-          <caret line="526" column="14" selection-start-line="526" selection-start-column="9" selection-end-line="526" selection-end-column="14" />
+        <state vertical-scroll-proportion="-8.931034">
+          <caret line="532" column="24" selection-start-line="532" selection-start-column="24" selection-end-line="532" selection-end-column="24" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app.py">
+    <entry file="file://$PROJECT_DIR$/app_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33215547">
-          <caret line="433" column="23" selection-start-line="433" selection-start-column="15" selection-end-line="433" selection-end-column="23" />
+        <state vertical-scroll-proportion="0.84294873">
+          <caret line="55" column="28" selection-start-line="55" selection-start-column="28" selection-end-line="55" selection-end-column="28" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>

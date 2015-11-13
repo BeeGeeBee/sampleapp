@@ -45,10 +45,10 @@ class ComponentsTestCase(unittest.TestCase):
     def test_2categorysearch(self):
         rv = self.app.get('/categorysearch/0/0')
         assert '->Semiconductor' in rv.data
-        rv = self.app.get('/categorysearch/1/20')
+        rv = self.app.get('/categorysearch/1/12')
         assert '->LED' in rv.data
         # Display details of an LED and check the order code
-        rv = self.app.get('/categorysearch/3/25')
+        rv = self.app.get('/categorysearch/3/16')
         assert '55-0125' in rv.data
 
 
