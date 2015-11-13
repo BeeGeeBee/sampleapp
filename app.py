@@ -169,6 +169,7 @@ def showcomponents(componentid=None):
 @app.route('/categorysearch/<categorylevel>/<categoryid>')
 def categorysearch(categorylevel=None, categoryid=None):
     if categorylevel is not None and categoryid is not None:
+        # print 'Category level & id {} {}'.format(categorylevel, categoryid)
         categories = Category()
         catlevel = int(categorylevel)
         catid = int(categoryid)

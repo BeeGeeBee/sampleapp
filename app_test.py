@@ -20,7 +20,7 @@ class ComponentsTestCase(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app.app.config['DATABASE'])
 
-    def test_2database(self):
+    def test_21database(self):
         print "Creating test database.\n"
         testsession = createdbsession('sqlite:///testdatabase.db', sqlecho=False, cleardown=True)
         # Initial Populate
@@ -45,10 +45,10 @@ class ComponentsTestCase(unittest.TestCase):
     def test_2categorysearch(self):
         rv = self.app.get('/categorysearch/0/0')
         assert '->Semiconductor' in rv.data
-        rv = self.app.get('/categorysearch/1/12')
+        rv = self.app.get('/categorysearch/1/20')
         assert '->LED' in rv.data
         # Display details of an LED and check the order code
-        rv = self.app.get('/categorysearch/3/16')
+        rv = self.app.get('/categorysearch/3/25')
         assert '55-0125' in rv.data
 
 

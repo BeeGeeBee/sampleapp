@@ -338,7 +338,7 @@ class ComponentObject(BaseObject):
         self.datasheet = None
         self.locationsid = 0
         self.suppliersid = 0
-        self.categoriesid = []
+        self.categoriesid = 0
         self.featuresid = []
         self.new = None
 
@@ -346,7 +346,7 @@ class ComponentObject(BaseObject):
         qry = self.dbsession.query(self.table.ID).filter(self.table.Name == self.Name).\
             filter(self.table.LocationsID == self.locationsid).\
             filter(self.table.SuppliersID == self.suppliersid).\
-            filter(self.table.CategoriesID == self.categoriesid[0])
+            filter(self.table.CategoriesID == self.categoriesid)
         self.ID = getid(qry)
         if self.ID == 0:
             qry = self.dbsession.query(func.max(self.table.ID))
@@ -359,16 +359,16 @@ class ComponentObject(BaseObject):
         self.Name = value
         # See if a category already exists for this name
         try:
-            categoriesid = self.dbsession.query(Categories.ID).\
-                filter(Categories.Name == self.Name).one()
+             categoriesid = self.dbsession.query(Categories.ID).\
+                 filter(Categories.Name == self.Name).one()
         except NoResultFound:
-            category = CategoryObject(self.dbsession, Categories)
-            category.parsename(value)
-            qry = self.dbsession.query(func.max(Categories.ID))
-            category.ID = getnextid(self.dbsession, qry)
-            category.add()
-            self.categoriesid.append(category.ID)
-            return 'Component'
+             category = CategoryObject(self.dbsession, Categories)
+             category.parsename(value)
+             qry = self.dbsession.query(func.max(Categories.ID))
+             category.ID = getnextid(self.dbsession, qry)
+             category.add()
+             self.categoriesid = category.ID
+             return 'Component'
 
     def parseid(self, value):
         pass
@@ -392,7 +392,7 @@ class ComponentObject(BaseObject):
         if self.Description is None:
             self.Description = self.Name
         add_component = Components(ID=self.ID, Name=self.Name, Description=self.Description,
-                                   CategoriesID=self.categoriesid[0], SuppliersID=self.suppliersid,
+                                   CategoriesID=self.categoriesid, SuppliersID=self.suppliersid,
                                    CurrentStock=self.currentstock, ReorderLevel=self.reorderlevel,
                                    LocationsID=self.locationsid, Datasheet=self.datasheet,
                                    OrderCode=self.ordercode, UnitPrice=self.unitprice)
@@ -456,7 +456,8 @@ class NewComponent(object):
     def checkid(self, obj):
         if obj.ID is None:
             if obj.Name is not None:
-                obj.setid()
+                if obj.Name != '':
+                    obj.setid()
         if obj.new:
             return obj.add()
         return
@@ -471,7 +472,7 @@ class NewComponent(object):
                     if self.feature.newname is not None:
                         checkstatus = self.checkid(self.feature)
                         if checkstatus is not None:
-                            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+                            logstatus = '{}{}'.format(logstatus, checkstatus)
                         self.featurelist.append(self.feature.ID)
                         self.feature.__init__(self.fileoject.dbsession, Features)
                         self.feature.Name = value
@@ -479,41 +480,48 @@ class NewComponent(object):
                     if self.category.newname is not None:
                         checkstatus = self.checkid(self.category)
                         if checkstatus is not None:
-                            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+                            logstatus = '{}{}'.format(logstatus, checkstatus)
                         self.categorylist.append(self.category.ID)
                         self.category.__init__(self.fileoject.dbsession, Categories)
                         self.category.Name = value
-                elif status == 'Component':
-                    self.categorylist.append(self.component.categoriesid[0])
             except KeyError:
                 pass
         checkstatus = self.checkid(self.location)
         if checkstatus is not None:
-            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+            logstatus = '{}{}'.format(logstatus, checkstatus)
         checkstatus = self.checkid(self.supplier)
         if checkstatus is not None:
-            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+            logstatus = '{}{}'.format(logstatus, checkstatus)
         self.component.suppliersid = self.supplier.ID
         self.component.locationsid = self.location.ID
         checkstatus = self.checkid(self.component)
         if checkstatus is not None:
-            logstatus = '{}{}\n'.format(logstatus, checkstatus)
+            logstatus = '{}{}'.format(logstatus, checkstatus)
         # Add the category definitions
+        self.category.__init__(self.fileoject.dbsession, Categories)
+        self.category.parsename(self.component.Name)
+        self.category.add()
+        self.categorylist.append(self.category.ID)
         listorder = 0
         for categoryid in self.categorylist:
-            listorder += 1
-            add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
-                                         CategoryOrder=listorder)
-            self.fileoject.dbsession.add(add_definition)
-            print 'Adding definition {} {} {}'.format(self.component.ID, categoryid, listorder)
+            if categoryid is not None:
+                listorder += 1
+                add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
+                                             CategoryOrder=listorder)
+                self.fileoject.dbsession.add(add_definition)
+                self.fileoject.filestatus =  '{}Adding definition {} {} {}\n'.\
+                    format(self.fileoject.filestatus, self.component.ID, categoryid, listorder)
+            # print self.fileoject.filestatus
         # Add the features
         listorder = 0
         for featureid in self.featurelist:
-            listorder += 1
-            add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
-                                             ListOrder=listorder)
-            self.fileoject.dbsession.add(add_definition)
-            print 'Adding feature definition {} {} {}'.format(self.component.ID, featureid, listorder)
+            if featureid is not None:
+                listorder += 1
+                add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
+                                                 ListOrder=listorder)
+                self.fileoject.dbsession.add(add_definition)
+                self.fileoject.filestatus =  '{}Adding feature definition {} {} {}\n'.\
+                    format(self.fileoject.filestatus, self.component.ID, featureid, listorder)
         self.fileoject.dbsession.commit()
         self.rowsloaded += self.component.rowsloaded
 #        print logstatus,
