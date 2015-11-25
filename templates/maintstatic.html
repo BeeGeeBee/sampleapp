@@ -13,15 +13,19 @@
     <button id="addButton" class="float-left submit-button" title="Click to add a new {{option}}" onclick="redirect()">Add</button>
 <table border="1">
     <tr>
+        <th>Delete</th>
         {% for field in form[-1] %}
             <th>{{field.label}}</th>
         {% endfor %}
     </tr>
     {% for row in range(numrows) %}
     <tr>
+        {% autoescape false %}
+        <td>{{deleteoption[row-1]}}</td>
         {% for field in form[row-1] %}
-        <td>{{field.value}}</td>
+        <td>{{field.data}}</td>
         {% endfor %}
+        {% endautoescape %}
     </tr>
     {% endfor %}
 </table>

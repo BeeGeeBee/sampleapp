@@ -35,6 +35,15 @@
         <p>This is a sample application using Python and Flask with SQLAlchemy on the server side. The Client side is HTML, CSS and Javascript.</p>
         {% block main %}{% endblock main %}
       </div>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class=flashes>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
     </div>
   </body>
 </html>

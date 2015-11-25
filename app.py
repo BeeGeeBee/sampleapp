@@ -1,10 +1,11 @@
 import os
-from flask import Flask, render_template, request, send_file, redirect, url_for
-from forms import ComponentsForm, LocationsForm, SuppliersForm, BasicForm, FeaturesForm
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+from forms import ComponentsForm, LocationsForm, SuppliersForm, BasicForm, FeaturesForm, CategoriesForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features
 from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
-from componentsmodule import loadfile, Category, HtmlMenu, createdbsession, getnextid
+from componentsmodule import loadfile, Category, HtmlMenu, createdbsession, getnextid, SupplierObject,\
+    LocationObject, FeatureObject, CategoryObject, NewComponent, FileLoad, ComponentObject
 
 
 __author__ = 'Bernard'
@@ -124,14 +125,17 @@ def showcomponents(componentid=None):
     if q.Components.OrderCode is not None:
         form.ordercode.data = q.Components.OrderCode
     form.supplier.data = ''
+    form.supplier.choices = []
     if q.Suppliers is not None:
         form.supplier.data = q.Suppliers.Name
+        form.supplier.choices = [(q.Suppliers.ID, q.Suppliers.Name)]
     form.location.data = ''
-    form.sublocation.data = ''
+    form.location.choices = []
     if q.Locations is not None:
-        form.location.data = q.Locations.Name
+        form.location.data = q.Locations.Name + '::'
         if q.Locations.Sublocation is not None:
-            form.sublocation.data = q.Locations.Sublocation
+            form.location.data = form.location.data + q.Locations.Sublocation
+        form.location.choices = [(q.Locations.ID, form.location.data)]
     form.datasheet.data = ''
     if q.Components.Datasheet is not None:
         form.datasheet.data = q.Components.Datasheet
@@ -152,17 +156,17 @@ def showcomponents(componentid=None):
         catsearch.id.append(category.Categories.ID)
         catsearch.name.append(category.Categories.Name)
         catsearchindex += 1
-    form.feature.label = []
-    form.feature.name = []
-    for feature in session.query(Features):
-        form.feature.label.append(feature.Name)
-        if feature.StrValue is not None:
-            form.feature.name.append(feature.StrValue)
-        else:
-            form.feature.name.append(str(feature.IntValue))
+    # form.feature.label = []
+    # form.feature.name = []
+    # for feature in session.query(Features):
+    #     form.feature.label.append(feature.Name)
+    #     if feature.StrValue is not None:
+    #         form.feature.name.append(feature.StrValue)
+    #     else:
+    #         form.feature.name.append(str(feature.IntValue))
 
     return render_template('componentform.html', form=form, numcats=len(form.categoryid.id),
-                           numfeatures=len(form.feature.label), readlock='True')
+                           numfeatures=0, readlock='True')
 
 
 # Needs refactoring
@@ -302,36 +306,33 @@ def populatelist(option):
     if option is None:
         form.append(initstaticform())
     queryobj = createstaticquery(querytable)
+    deleteoption = []
+    optionobject = chooseobject(option)
     for data_row in queryobj:
+        form.append(optionobject.loadform(data_row, True))
         if option == 'component':
-            form.append(initstaticform(ComponentsForm))
-        elif option == 'category':
-            form.append(initstaticform())
-        elif option == 'location':
-            form.append(initstaticform(LocationsForm))
-            if data_row.Sublocation:
-                form[-1].sublocation.value = data_row.Sublocation
-        elif option == 'supplier':
-            form.append(initstaticform(SuppliersForm))
-            if data_row.Website:
-                form[-1].website.value = data_row.Website
-        elif option == 'feature':
-            form.append(initstaticform(FeaturesForm))
-            if data_row.StrValue:
-                form[-1].strvalue.value = data_row.StrValue
-            if data_row.IntValue:
-                form[-1].intvalue.value = data_row.IntValue
-        form[-1].name.value = data_row.Name
-        if data_row.Description:
-            form[-1].description.value = data_row.Description
-    return option, pagetitle, form
+            form[-1].supplier.choices = [(a.ID, a.Name) for a in session.query(Suppliers).order_by('Name')]
+            form[-1].location.choices = \
+                [(a.ID, a.Name+'::'+a.Sublocation) for a in session.query(Locations).order_by('Name')]
+            deleteoption.append('<a href="/delete/{}/{}">Del</a>'.format(option, data_row.ID))
+        else:
+            if optionobject is not None:
+                form[-1].components.data = optionobject.checkusage(data_row.ID)
+                if form[-1].components.data == []:
+                    deleteoption.append('<a href="/delete/{}/{}">Del</a>'.format(option, data_row.ID))
+                else:
+                    deleteoption.append('')
+            else:
+                deleteoption.append('')
+
+    return option, pagetitle, form, deleteoption
 
 
 @app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
 def maintstaticdata(option='component'):
-    (option, pagetitle, form) = populatelist(option)
+    (option, pagetitle, form, deleteoptions) = populatelist(option)
     return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                           numrows=len(form), option=option)
+                           numrows=len(form), option=option, deleteoption=deleteoptions)
 
 
 @app.route("/fileupload", methods=['GET', 'POST'])
@@ -344,11 +345,11 @@ def fileupload():
         return render_template('fileupload.html')
 
 
-def setform(option, req):
+def setform(option, req=None, modify=False):
     if option == 'component':
         form = ComponentsForm(req)
     elif option == 'category':
-        form = BasicForm(req)
+        form = CategoriesForm(req)
     elif option == 'location':
         form = LocationsForm(req)
     elif option == 'supplier':
@@ -357,6 +358,8 @@ def setform(option, req):
         form = FeaturesForm(req)
     else:
         form = BasicForm()
+    if modify:
+        del form.components
     return form
 
 
@@ -365,27 +368,20 @@ def checknew(option, *argv):
     for arg in argv:
         arglst.append(arg)
     name = arglst[0]
-    if option == 'component':
-        querytable = Components
-        qry = session.query(querytable).filter(querytable.Name == name)
-    elif option == 'category':
-        querytable = Categories
-        qry = session.query(querytable).filter(querytable.Name == name)
-    elif option == 'location':
-        querytable = Locations
+    option, querytable, notused = setquerytable(option)
+    qry = session.query(querytable).filter(querytable.Name == name)
+    if option == 'location':
         sublocation = arglst[1]
-        qry = session.query(querytable).filter(querytable.Name == name).\
-            filter(querytable.Sublocation == sublocation)
-    elif option == 'supplier':
-        querytable = Suppliers
-        qry = session.query(querytable).filter(querytable.Name == name)
+        qry = qry.filter(querytable.Sublocation == sublocation)
     elif option == 'feature':
-        querytable = Features
-        qry = session.query(querytable).filter(querytable.Name == name)
-    else:
-        querytable = Locations
-        qry = session.query(querytable).filter(querytable.Name == name)
-
+        strvalue = arglst[1]
+        intvalue = arglst[2]
+        qry = qry.filter(querytable.StrValue == strvalue).filter(querytable.IntValue == intvalue)
+    elif option == 'component':
+        supplierid = arglst[1]
+        locationid = arglst[2]
+        qry = qry.filter(querytable.SuppliersID == supplierid).\
+            filter(querytable.LocationsID == locationid)
     try:
         qry.one()
         return False
@@ -399,57 +395,113 @@ def getnewstaticid(table):
 
 
 def adddata(option, form):
+    add_item = None
     if option == 'component':
-        querytable = Components
+        # Use the NewComponent object to add this
+        fileobj = FileLoad('PASS',session)
+        formdata = []
+        sup = SupplierObject(session, Suppliers)
+        form.supplier.data = sup.getdatabyid(form.supplier.data).Name
+        loc = LocationObject(session, Locations)
+        locdata = loc.getdatabyid(form.location.data)
+        for field in form:
+            if field.label.text == 'Location':
+                fileobj.titles.append('Sublocation')
+                formdata.append(locdata.Sublocation)
+                fileobj.titles.append(field.label.text)
+                formdata.append(locdata.Name)
+            else:
+                fileobj.titles.append(field.label.text)
+                formdata.append(field.data)
+        component = NewComponent(fileobj, formdata)
+        status = component.parsedata()
+        print status
+
     elif option == 'category':
-        querytable = Categories
         staticid = getnewstaticid(Categories)
-        add_category = Categories(ID=staticid, Name=form.name.data, Description=form.description.data)
-        session.add(add_category)
+        add_item = Categories(ID=staticid, Name=form.name.data, Description=form.description.data)
     elif option == 'location':
         staticid = getnewstaticid(Locations)
-        add_location = Locations(ID=staticid, Name=form.name.data, Description=form.description.data,
+        add_item = Locations(ID=staticid, Name=form.name.data, Description=form.description.data,
                                  Sublocation=form.sublocation.data)
-        session.add(add_location)
     elif option == 'supplier':
         staticid = getnewstaticid(Suppliers)
-        add_supplier = Suppliers(ID=staticid, Name=form.name.data, Description=form.description.data,
+        add_item = Suppliers(ID=staticid, Name=form.name.data, Description=form.description.data,
                                  Website=form.website.data)
-        session.add(add_supplier)
     elif option == 'feature':
         staticid = getnewstaticid(Features)
-        add_data = Features(ID=staticid, Name=form.name.data, Description=form.description.data,
+        add_item = Features(ID=staticid, Name=form.name.data, Description=form.description.data,
                                  StrValue=form.strvalue.data, IntValue=form.intvalue.data)
-        session.add(add_data)
     else:
         querytable = Locations
-    session.commit()
+    if add_item is not None:
+        session.add(add_item)
+        session.commit()
+        flash('Added {} {}'.format(option, form.name.data))
 
 
 @app.route('/add/<option>', methods=['GET', 'POST'])
 def addelement(option=None):
-    form = setform(option, request.form)
+    form = setform(option, request.form, modify=True)
     if request.method == 'POST':
         if option == 'location':
             if checknew(option, form.name.data, form.sublocation.data):
+                adddata(option, form)
+        elif option == 'feature':
+            if checknew(option, form.name.data, form.strvalue.data, form.intvalue.data):
+                adddata(option, form)
+        elif option == 'component':
+            if checknew(option, form.name.data, form.supplier.data, form.location.data):
                 adddata(option, form)
         else:
             if checknew(option, form.name.data):
                 adddata(option, form)
 
-        (option, pagetitle, form) = populatelist(option)
+        (option, pagetitle, form, deleteoptions) = populatelist(option)
         return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                               numrows=len(form), option=option)
+                               numrows=len(form), option=option, deleteoption=deleteoptions)
     else:
-        if option == 'supplier':
-            form = SuppliersForm()
-        elif option == 'location':
-            form = LocationsForm()
-        elif option == 'feature':
-            form = FeaturesForm()
-        else:
-            form = None
+        form = setform(option, None, modify=True)
+        if option == 'component':
+            # Add suppliers choices
+            form.supplier.choices = [(a.ID, a.Name) for a in session.query(Suppliers).order_by('Name')]
+            # Add location choices
+            form.location.choices = \
+                [(a.ID, a.Name+'::'+a.Sublocation) for a in session.query(Locations).order_by('Name')]
+
     return render_template('addelement.html', form=form, statictitle=option)
+
+
+def chooseobject(option=None):
+    if option == 'supplier':
+        obj = SupplierObject(session, Suppliers)
+    elif option == 'location':
+        obj = LocationObject(session, Locations)
+    elif option == 'feature':
+        obj = FeatureObject(session, Features)
+    elif option == 'category':
+        obj = CategoryObject(session, Categories)
+    elif option == 'component':
+        obj = ComponentObject(session, Components)
+    else:
+        obj = None
+    return obj
+
+
+@app.route('/delete/<option>/<id>', methods=['GET', 'POST'])
+def deleteelement(option=None, id=None):
+    form = setform(option, request.form)
+    obj = chooseobject(option)
+    if request.method == 'POST':
+        # confirm button was pressed and delete
+        flash(obj.delete(id))
+        # refresh the list
+        (option, pagetitle, form, deleteoptions) = populatelist(option)
+        return render_template('maintstatic.html', statictitle=pagetitle, form=form,
+                               numrows=len(form), option=option, deleteoption=deleteoptions)
+    else:
+        form = obj.loadform(obj.getdatabyid(id), False)
+    return render_template('delelement.html', form=form, statictitle=option, readlock='True', elementid=id)
 
 
 if __name__=='__main__':

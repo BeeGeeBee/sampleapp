@@ -2,6 +2,7 @@ import csv
 from sqlalchemy.sql import func
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features,\
     DefinedFeatures
+from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
@@ -69,87 +70,6 @@ def getid(con):
         return 0
 
 
-# def adddefinition(con, componentid, categoryid, listorder):
-#     """
-#     Add a new definition to the definitions table
-#     :param con:
-#     :param componentid:
-#     :param categoryid:
-#     :param listorder:
-#     :return:
-#     """
-#     try:
-#         data = con.query(Definitions.ComponentID).filter(Definitions.ComponentID == componentid).\
-#             filter(Definitions.CategoriesID == categoryid).\
-#             filter(Definitions.CategoryOrder == listorder).one()
-#         return
-#     except NoResultFound:
-#         add_def = Definitions(ComponentID=str(componentid), CategoriesID=str(categoryid),
-#                               CategoryOrder=str(listorder))
-#         con.add(add_def)
-#         con.commit()
-#         return
-#
-#
-# class AddComponent(object):
-#     """
-#
-#     Class to contain a component definition and provide interface.
-#
-#     """
-#
-#     def __init__(self, initial_data, session, rowsloaded):
-#         """
-#
-#         :param initial_data:
-#         :return:
-#         """
-#         self.componentid = None
-#         self.componentname = None
-#         self.description = None
-#         self.categoriesid = []
-#         self.suppliersid = 0
-#         self.currentstock = None
-#         self.reorderlevel = None
-#         self.locationsid = 0
-#         self.datasheet = None
-#         self.ordercode = None
-#         self.unitprice = None
-#         self.rowsloaded = rowsloaded
-#         self.loadstatus = ''
-#         for column_name, column_value in initial_data:
-#             #print '\nAttribute {} - ({})\n'.format(attribute_lookup[column_name], column_value)
-#             if not callable(attribute_lookup[column_name][2]):
-#                 self.__dict__[attribute_lookup[column_name][1]] = column_value
-#             else:
-#                 self.__dict__[attribute_lookup[column_name][1]] = \
-#                     attribute_lookup[column_name][2](session, attribute_lookup[column_name][0],
-#                                                      column_value, self)
-#         # Check if the component exists if not create it
-#         try:
-#             testid = session.query(Components.ID).\
-#                 filter(Components.Name == self.componentname).\
-#                 filter(Components.CategoriesID == self.categoriesid[0]).\
-#                 filter(Components.SuppliersID == self.suppliersid).\
-#                 filter(Components.LocationsID == self.locationsid).one()
-#             self.loadstatus = '{}{} already exists for this supplier and location.\n'.\
-#                 format(self.loadstatus, self.componentname)
-#
-#         except NoResultFound:
-#             new_component = Components(ID=self.componentid, Name=self.componentname,
-#                                        Description=self.description,
-#                                        CategoriesID=self.categoriesid[0], SuppliersID=self.suppliersid,
-#                                        CurrentStock=self.currentstock, ReorderLevel=self.reorderlevel,
-#                                        LocationsID=self.locationsid, Datasheet=self.datasheet,
-#                                        OrderCode=self.ordercode, UnitPrice=self.unitprice)
-#             session.add(new_component)
-#             self.rowsloaded += 1
-#             self.loadstatus = '{}{} added.\n'.\
-#                 format(self.loadstatus, self.componentname)
-#
-#         session.commit()
-#
-#
 class Category(object):
     """
     Define Category class to keep track of category searches
@@ -176,11 +96,20 @@ class HtmlMenu(object):
 
 def filecheck(fn):
     try:
-        open(fn, "r")
+        if fn != 'PASS':
+            open(fn, "r")
         return 1
     except IOError:
         return 0
 
+
+def getusage(qry):
+        result = None
+        try:
+            result = [str(comp[0]) for comp in qry.all()]
+        except NoResultFound:
+            pass
+        return result
 
 class BaseObject(object):
     def __init__(self, dbsession, table):
@@ -210,11 +139,49 @@ class BaseObject(object):
     def parsedescription(self, value):
         self.Description = value
 
+    def getdatabyname(self, name):
+        qry = None
+        if name is not None:
+            try:
+                qry = self.dbsession.query(self.table).filter(self.table.Name == name).one()
+            except NoResultFound:
+                qry = None
+        return qry
+
+    def getdatabyid(self, dataid):
+        qry = None
+        if dataid is not None:
+            try:
+                qry = self.dbsession.query(self.table).filter(self.table.ID == dataid).one()
+            except NoResultFound:
+                qry = None
+        return qry
+
+    def checkusage(self, itemid):
+        return []
+
+    def delete(self, itemid):
+        data = self.getdatabyid(itemid)
+        if data:
+            usage = self.checkusage(itemid)
+            if usage != []:
+                return 'Cannot delete {}. It is referenced by component(s) {}'.format(data.Name, usage)
+            else:
+                name = data.Name
+                self.dbsession.query(self.table).filter(self.table.ID==itemid).delete()
+                self.dbsession.commit()
+                return 'Successfully deleted ID {} {}'.format(itemid, name)
+        return 'Cannot delete. ID {} does not exist.'.format(itemid)
+
 
 class SupplierObject(BaseObject):
     def __init__(self, dbsession, table):
         BaseObject.__init__(self, dbsession, table)
         self.Website = None
+
+    def checkusage(self, itemid):
+        qry = self.dbsession.query(Components.Name).filter(Components.SuppliersID == itemid)
+        return getusage(qry)
 
     def checkcomplete(self):
         if self.Name is not None and \
@@ -237,11 +204,35 @@ class SupplierObject(BaseObject):
         return 'Adding supplier {} - {}, {}, {}\n'.format(self.ID, self.Name,
                                                           self.Description, self.Website)
 
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        form = SuppliersForm()
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.website.data = componentdata.Website
+        return form
+
 
 class LocationObject(BaseObject):
     def __init__(self, dbsession, table):
         BaseObject.__init__(self, dbsession, table)
         self.Sublocation = None
+
+    def getdatabyid(self, dataid):
+        qry = None
+        if dataid is not None:
+            try:
+                qry = self.dbsession.query(Locations).filter(Locations.ID == dataid).one()
+            except NoResultFound:
+                qry = None
+        return qry
+
+    def checkusage(self, itemid):
+        qry = self.dbsession.query(Components.Name).filter(Components.LocationsID == itemid)
+        return getusage(qry)
 
     def checkcomplete(self):
         if self.Name is not None and \
@@ -264,6 +255,31 @@ class LocationObject(BaseObject):
         return 'Adding location {} - {}, {}, {}\n'.format(self.ID, self.Name,
                                                           self.Description, self.Sublocation)
 
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        form = LocationsForm()
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.sublocation.data = componentdata.Sublocation
+        return form
+
+    def getdatabyname(self, name, sublocation=None):
+        result = None
+        if name is not None:
+            qry = self.dbsession.query(self.table).filter(self.table.Name == name)
+            if sublocation is not None:
+                qry = qry.filter(self.table.Sublocation == sublocation)
+            else:
+                qry = qry.filter(self.table.Sublocation == '')
+            try:
+                result = qry.one()
+            except NoResultFound:
+                result = None
+        return result
+
 
 class FeatureObject(BaseObject):
     def __init__(self, dbsession, table):
@@ -271,6 +287,13 @@ class FeatureObject(BaseObject):
         self.strvalue = None
         self.intvalue = None
         self.newname = self.Name
+
+    def checkusage(self, itemid):
+        qry = self.dbsession.query(Components.Name).\
+            group_by(Components.Name).\
+            join(DefinedFeatures, DefinedFeatures.ComponentID == Components.ID).\
+            filter(DefinedFeatures.FeatureID == itemid)
+        return getusage(qry)
 
     def setid(self):
         qry = self.dbsession.query(self.table).filter(self.table.Name == self.Name).\
@@ -306,11 +329,30 @@ class FeatureObject(BaseObject):
         self.dbsession.commit()
         return 'Adding feature {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
 
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        form = FeaturesForm()
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.strvalue.data = componentdata.StrValue
+        form.intvalue.data = componentdata.IntValue
+        return form
+
 
 class CategoryObject(BaseObject):
     def __init__(self, dbsession, table):
         BaseObject.__init__(self, dbsession, table)
         self.newname = self.Name
+
+    def checkusage(self, itemid):
+        qry = self.dbsession.query(Components.Name).\
+            group_by(Components.Name).\
+            join(Definitions, Definitions.ComponentID == Components.ID).\
+            filter(Definitions.CategoriesID == itemid)
+        return getusage(qry)
 
     def parsename(self, value):
         if self.Name is not None:
@@ -327,13 +369,23 @@ class CategoryObject(BaseObject):
         self.dbsession.commit()
         return 'Adding category {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
 
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        form = CategoriesForm()
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        return form
+
 
 class ComponentObject(BaseObject):
     def __init__(self, dbsession, table):
         BaseObject.__init__(self, dbsession, table)
-        self.currentstock = None
-        self.reorderlevel = None
-        self.unitprice = None
+        self.currentstock = 0
+        self.reorderlevel = 0
+        self.unitprice = 0.0
         self.ordercode = None
         self.datasheet = None
         self.locationsid = 0
@@ -404,6 +456,47 @@ class ComponentObject(BaseObject):
                                                              self.Description,
                                                              self.suppliersid,
                                                              self.locationsid)
+
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        trim = arglst[1]
+        form = ComponentsForm()
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.currentstock.data = componentdata.CurrentStock
+        form.reorderlevel.data = componentdata.ReorderLevel
+        form.datasheet.data = componentdata.Datasheet
+        form.ordercode.data = componentdata.OrderCode
+        form.unitprice.data = componentdata.UnitPrice
+        form.supplier.choices = [(a.ID, a.Name) for a in self.dbsession.query(Suppliers).order_by('Name')]
+        form.location.choices = \
+                [(a.ID, a.Name+'::'+a.Sublocation) for a in self.dbsession.query(Locations).order_by('Name')]
+        form.supplier.data = \
+            [item[1] for item in form.supplier.choices if item[0]==componentdata.SuppliersID][0]
+        form.location.data = \
+            [item[1] for item in form.location.choices if item[0]==componentdata.LocationsID][0]
+        component = self.getdatabyname(componentdata.Name)
+        componentid = component.ID
+        form.features = []
+        for feature in self.dbsession.query(Features).\
+            join(DefinedFeatures, DefinedFeatures.FeatureID==Features.ID).\
+            filter(DefinedFeatures.ComponentID==componentid).all():
+            featureobj = FeatureObject(self.dbsession, Features)
+            form.features.append(featureobj.loadform(feature))
+            del form.features[-1].components
+            form.features[-1].name.label = 'Feature'
+        if trim:
+            del form.datasheet
+        #    del form.feature
+            del form.reorderlevel
+            del form.id
+            del form.unitprice
+            del form.ordercode
+        del form.components
+        return form
 
 
 class NewComponent(object):
@@ -612,7 +705,7 @@ class FileLoad(object):
                 return ERRValueBeforeFeature
         return 0
 
-    def loaddatarows(self, session):
+    def loaddatarows(self):
         self.rows = 0
         status = 0
         for data in self.csvreader:
@@ -639,7 +732,7 @@ def loadfile(filename=None, session=None):
         with open(filename, mode='r') as fp:
             stat = fileloader.loadtitles(fp)
             if stat == 0:
-                stat = fileloader.loaddatarows(session)
+                stat = fileloader.loaddatarows()
                 if stat == 0:
                     fileloader.filestatus = '{}File <{}> successfully loaded.\n'.\
                         format(fileloader.filestatus, filename)

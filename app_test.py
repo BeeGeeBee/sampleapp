@@ -4,6 +4,7 @@ import unittest
 import tempfile
 import StringIO
 from componentsmodule import FileLoad, loadfile, createdbsession
+from flask import url_for
 
 __author__ = 'bernie'
 
@@ -98,13 +99,47 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Maintain Components' in rv.data
         # Page displays current components
         assert 'LED 5mm Green' in rv.data
+        # Page contains a delete option column.
+        assert 'Delete' in rv.data
+        # Page gives the option to add a component
+        assert '"addButton"' in rv.data
+        # Table should not have a Supplies Components header
+        assert 'Supplies Components' not in rv.data
+        # Add a component
+        rv = self.app.post('/add/component', data=dict(
+            name='Test component',
+            description='This is a test component',
+            supplier='3',
+            location='1'
+        ))
+        assert 'Test component' in rv.data
+        assert 'This is a test component' in rv.data
+        # Check delete option available
+        assert '"/delete/component/19"' in rv.data
+        # Add features
+        rv = self.app.post('/addfeature/Test%20component', data=dict(
+                name='Package',
+                strvalue='DIP-8'
+            ))
+        assert 'Added Package:DIP-8' in rv.data
+        # Delete this new component
+        rv = self.app.post('/delete/component/19')
+        assert 'Successfully deleted ID 19 Test component' in rv.data
 
 # Maintain Categories
     def test_2maintcategoriess(self):
         rv = self.app.get('/maintstaticdata/category')
         # Page labelled correctly
         assert 'Maintain Categories' in rv.data
-        # Page displays current locations
+        # Page contains a delete option column.
+        assert 'Delete' in rv.data
+        # Should not offer delete for established category
+        assert '"/delete/category/1"' not in rv.data
+        # Table should have a Supplies Components header
+        assert 'Supplies Components' in rv.data
+        # Should see component referenced
+        assert "'PIC12F629', 'PIC12F675'" in rv.data
+        # Page displays current categories
         assert 'Semiconductor' in rv.data
         # Page gives the option to add a category
         assert '"addButton"' in rv.data
@@ -115,6 +150,14 @@ class ComponentsTestCase(unittest.TestCase):
         ))
         assert 'Test category' in rv.data
         assert 'This is a test category' in rv.data
+        # Check delete option available
+        assert '"/delete/category/35"' in rv.data
+        # Delete this new category
+        rv = self.app.post('/delete/category/35')
+        assert 'Successfully deleted ID 35 Test category' in rv.data
+        # Cannot delete a supplier in use
+        rv = self.app.post('/delete/category/1')
+        assert 'Cannot delete IC. It is referenced by component(s)' in rv.data
 
 
 # Maintain Locations
@@ -122,6 +165,14 @@ class ComponentsTestCase(unittest.TestCase):
         rv = self.app.get('/maintstaticdata/location')
         # Page labelled correctly
         assert 'Maintain Locations' in rv.data
+        # Page contains a delete option column.
+        assert 'Delete' in rv.data
+        # Should not offer delete for established location
+        assert '"/delete/location/1"' not in rv.data
+        # Table should have a Supplies Components header
+        assert 'Supplies Components' in rv.data
+        # Should see component referenced
+        assert "'PIC16F887A', 'PIC12F675'" in rv.data
         # Page displays current locations
         assert 'MainCupboard - Cab A Tray 1' in rv.data
         # Page gives the option to add a location
@@ -135,6 +186,14 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Test location' in rv.data
         assert 'This is a test location' in rv.data
         assert 'A test sublocation' in rv.data
+        # Check delete option available
+        assert '"/delete/location/3"' in rv.data
+        # Delete this new location
+        rv = self.app.post('/delete/location/3')
+        assert 'Successfully deleted ID 3 Test location' in rv.data
+        # Cannot delete a supplier in use
+        rv = self.app.post('/delete/location/1')
+        assert 'Cannot delete MainCupboard. It is referenced by component(s)' in rv.data
 
 
 # Maintain Suppliers
@@ -142,6 +201,14 @@ class ComponentsTestCase(unittest.TestCase):
         rv = self.app.get('/maintstaticdata/supplier')
         # Page labelled correctly
         assert 'Maintain Suppliers' in rv.data
+        # Page contains a delete option column.
+        assert 'Delete' in rv.data
+        # Should not offer delete for RapidOnline
+        assert '"/delete/supplier/1"' not in rv.data
+        # Table should have a Supplies Components header
+        assert 'Supplies Components' in rv.data
+        # Should see component referenced
+        assert "'PIC16F887A', 'PIC12F675'" in rv.data
         # Page displays current suppliers
         assert 'RapidOnline' in rv.data
         # Page gives the option to add a supplier
@@ -155,6 +222,15 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Test supplier' in rv.data
         assert 'This is a test supplier' in rv.data
         assert 'www.testdata.test' in rv.data
+        # Check delete option available
+        assert '"/delete/supplier/4"' in rv.data
+        # Delete this new supplier
+        rv = self.app.post('/delete/supplier/4')
+        assert 'Successfully deleted ID 4 Test supplier' in rv.data
+        # Cannot delete a supplier in use
+        rv = self.app.post('/delete/supplier/3')
+        assert 'Cannot delete Discontinued. It is referenced by component(s)' in rv.data
+
 
 
 # Maintain Features
@@ -162,22 +238,40 @@ class ComponentsTestCase(unittest.TestCase):
         rv = self.app.get('/maintstaticdata/feature')
         # Page labelled correctly
         assert 'Maintain Features' in rv.data
+        # Page contains a delete option column.
+        assert 'Delete' in rv.data
+        # Should not offer delete for RapidOnline
+        assert '"/delete/feature/1"' not in rv.data
+        # Table should have a Supplies Components header
+        assert 'Supplies Components' in rv.data
+        # Should see component referenced
+        assert "'PIC12F629', 'PIC12F675'" in rv.data
+        # Should not see multiple occurences of components
+        assert "'PIC16F887A', 'PIC16F887A'" not in rv.data
         # Page displays current Features
-        assert '' in rv.data
+        assert 'DIP-40' in rv.data
         # Page gives the option to add a feature
         assert '"addButton"' in rv.data
         # Add a feature
         rv = self.app.post('/add/feature', data=dict(
             name='Test feature',
             description='This is a test feature',
-            strvalue='A test feature',
+            strvalue='A Feature',
             intvalue='10'
         ))
         assert 'Test feature' in rv.data
         assert 'This is a test feature' in rv.data
-        assert 'A test feature' in rv.data
+        assert 'A Feature' in rv.data
         # Check one of the test data set features is there
         assert 'DIP-18' in rv.data
+        # Check delete option available
+        assert '"/delete/feature/6"' in rv.data
+        # Delete this new feature
+        rv = self.app.post('/delete/feature/6')
+        assert 'Successfully deleted ID 6 Test feature' in rv.data
+        # Cannot delete a feature in use
+        rv = self.app.post('/delete/feature/3')
+        assert 'Cannot delete Package. It is referenced by component(s)' in rv.data
 
 
 # Get a CSV formatted file
@@ -225,6 +319,12 @@ class ComponentsTestCase(unittest.TestCase):
         ))
         assert 'File &lt;{}&gt; successfully loaded.'.format(testfile) in rv.data
         assert '&gt; Data rows successfully loaded.' in rv.data
+        # Report components already configured so they are not loaded a second time.
+        testfile = 'testdata.csv'
+        rv = self.app.post('/fileupload', data=dict(
+            uploadfile=testfile
+        ))
+        assert 'Component PIC16F887A already exists' in rv.data
 
 
 if __name__ == '__main__':
