@@ -116,12 +116,22 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'This is a test component' in rv.data
         # Check delete option available
         assert '"/delete/component/19"' in rv.data
+        # Check add feature option available
+        assert '"/addfeature/19"' in rv.data
+        # Check add categories option available
+        assert '"/addcategories/19"' in rv.data
         # Add features
-        rv = self.app.post('/addfeature/Test%20component', data=dict(
-                name='Package',
-                strvalue='DIP-8'
+        rv = self.app.post('/addfeature/19', data=dict(
+                add2='y'
             ))
-        assert 'Added Package:DIP-8' in rv.data
+        assert 'Attached feature Package:DIP-8' in rv.data
+        # Attach it to some categories.
+        rv = self.app.post('/addcategories/19', data=dict(
+                cat2=1,
+                cat3=2
+            ))
+        assert 'Attached category ' in rv.data
+        assert 'Attached category ' in rv.data
         # Delete this new component
         rv = self.app.post('/delete/component/19')
         assert 'Successfully deleted ID 19 Test component' in rv.data

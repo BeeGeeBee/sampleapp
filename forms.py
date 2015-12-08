@@ -1,7 +1,7 @@
 __author__ = 'Bernard'
 
 from wtforms import Form, StringField, IntegerField, widgets,\
-    SelectField, DecimalField, HiddenField
+    SelectField, DecimalField, HiddenField, BooleanField, RadioField
 from wtforms.validators import Length
 
 class BasicForm(Form):
@@ -9,11 +9,14 @@ class BasicForm(Form):
     description = StringField('Description', [Length(max=250)])
     components = StringField('Supplies Components', [Length(max=5000)])
 
-
 class FeaturesForm(BasicForm):
     strvalue = StringField('String Value', [Length(max=250)])
     intvalue = IntegerField('Integer Value', [Length(max=10)])
 #    categoriesid = IntegerField('CategoriesID', [Length(max=10)])
+
+class AddFeaturesForm(FeaturesForm):
+#    add = BooleanField('Add', default=False)
+    featureid = IntegerField('ID', [Length(max=4)])
 
 
 class ComponentsForm(BasicForm):

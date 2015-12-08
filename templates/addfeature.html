@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Attach {{statictitle}}{% endblock title %}
+{% block main %}
+<a>Attach {{statictitle}}</a>
+<script type="text/javascript">
+    function redirect()
+    {
+    var url = "/maintstat/{{option}}"
+    window.location.href=url ;
+    }
+</script>
+{% if componentid != None %}
+<form method="post" action="/addfeature/{{componentid}}">
+<table border="1">
+    <tr>
+        {% for field in form[-1] %}
+            <th>{{field.label}}</th>
+        {% endfor %}
+    </tr>
+    {% for row in range(form|count) %}
+    <tr>
+        {% for field in form[row-1] %}
+        {% if field.type == "BooleanField" %}
+        <td>{{field}}</td>
+        {% else %}
+        {% if field.label != 'ID' %}
+        <td>{{field.data}}</td>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<p><input type=submit value=Save>
+ </form>
+{% endif %}
+
+{% endblock main %}

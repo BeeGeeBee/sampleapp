@@ -2,7 +2,9 @@ import csv
 from sqlalchemy.sql import func
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features,\
     DefinedFeatures
-from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm
+from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm,\
+    AddFeaturesForm
+from wtforms import BooleanField
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
@@ -499,6 +501,35 @@ class ComponentObject(BaseObject):
         return form
 
 
+class AddFeatureObject(FeatureObject):
+    def __init__(self, dbsession, table):
+        FeatureObject.__init__(self, dbsession, table)
+        self.componentid = None
+
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        attname = 'add{}'.format(componentdata.ID)
+        try:
+            afeature = self.dbsession.query(DefinedFeatures).\
+                filter(DefinedFeatures.ComponentID==self.componentid).\
+                filter(DefinedFeatures.FeatureID==componentdata.ID).one()
+            setattr(AddFeaturesForm, attname, BooleanField('add', default='y'))
+        except NoResultFound:
+            setattr(AddFeaturesForm, attname, BooleanField('add'))
+        form = AddFeaturesForm()
+        delattr(AddFeaturesForm, attname)
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.strvalue.data = componentdata.StrValue
+        form.intvalue.data = componentdata.IntValue
+     #   form.add.value = str(componentdata.ID)z
+        form.featureid.data = componentdata.ID
+        return form
+
+
 class NewComponent(object):
 
     def __init__(self, fileobject, data):
@@ -724,6 +755,12 @@ class FileLoad(object):
             format(self.filestatus, self.rowsloaded, self.rows)
         return status
 
+
+class CategoryTree(object):
+    def __init__(self):
+        self.id = None
+        self.name = None
+        self.listorder = None
 
 def loadfile(filename=None, session=None):
     fileloader = FileLoad(filename, session)
