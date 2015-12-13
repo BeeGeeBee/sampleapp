@@ -10,7 +10,7 @@
     }
 </script>
 {% if componentid != None %}
-<form method="post" action="/addfeature/{{componentid}}">
+<form method="post" action="/addcategories/{{componentid}}">
 <table border="1">
     <tr>
         {% for field in form[-1] %}
@@ -20,7 +20,7 @@
     {% for row in range(form|count) %}
     <tr>
         {% for field in form[row-1] %}
-        {% if field.type == "BooleanField" %}
+        {% if field.type == "IntegerField" %}
         <td>{{field}}</td>
         {% else %}
         {% if field.label != 'ID' %}

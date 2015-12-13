@@ -3,8 +3,8 @@ from sqlalchemy.sql import func
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features,\
     DefinedFeatures
 from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm,\
-    AddFeaturesForm
-from wtforms import BooleanField
+    AddFeaturesForm, AddCategoriesForm
+from wtforms import BooleanField, IntegerField
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
@@ -126,6 +126,7 @@ class BaseObject(object):
 
     def setid(self):
         qry = self.dbsession.query(self.table).filter(self.table.Name == self.Name)
+#        print self.Name, self.table
         self.ID = getid(qry)
         if self.ID == 0:
             qry = self.dbsession.query(func.max(self.table.ID))
@@ -361,6 +362,11 @@ class CategoryObject(BaseObject):
             self.newname = value
         else:
             self.Name = value
+        try:
+            located = self.dbsession.query(Categories).filter(Categories.Name==value).count()
+            self.new = False
+        except NoResultFound:
+            self.new = True
         return 'Category'
 
     def add(self):
@@ -369,6 +375,7 @@ class CategoryObject(BaseObject):
         add_category = Categories(ID=self.ID, Name=self.Name, Description=self.Description)
         self.dbsession.add(add_category)
         self.dbsession.commit()
+#        print 'Adding category {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
         return 'Adding category {} - {}, {}\n'.format(self.ID, self.Name, self.Description)
 
     def loadform(self, *argv):
@@ -415,15 +422,21 @@ class ComponentObject(BaseObject):
         try:
              found = self.dbsession.query(Categories.ID).\
                  filter(Categories.Name == self.Name).count()
-             self.New = False
+             if found > 0:
+                self.new = False
+             else:
+                 self.new = True
+#             print '{} already exists.'.format(self.Name)
         except NoResultFound:
+             self.new = True
              category = CategoryObject(self.dbsession, Categories)
              category.parsename(value)
              qry = self.dbsession.query(func.max(Categories.ID))
              category.ID = getnextid(self.dbsession, qry)
+#             print 'Adding category {}-{}'.format(category.ID, value)
              category.add()
              self.categoriesid = category.ID
-             return 'Component'
+        return 'Component'
 
     def parseid(self, value):
         pass
@@ -454,6 +467,11 @@ class ComponentObject(BaseObject):
         self.dbsession.add(add_component)
         self.dbsession.commit()
         self.rowsloaded += 1
+        # Also need to add a category
+        qry = self.dbsession.query(func.max(Categories.ID))
+        staticid = getnextid(self.dbsession, qry)
+        add_item = Categories(ID=staticid, Name=self.Name, Description=self.Name)
+        self.dbsession.add(add_item)
         return 'Adding Component {} - {}, {} {} {}\n'.format(self.ID, self.Name,
                                                              self.Description,
                                                              self.suppliersid,
@@ -492,7 +510,7 @@ class ComponentObject(BaseObject):
             form.features[-1].name.label = 'Feature'
         if trim:
             del form.datasheet
-        #    del form.feature
+            del form.categoryid
             del form.reorderlevel
             del form.id
             del form.unitprice
@@ -527,6 +545,33 @@ class AddFeatureObject(FeatureObject):
         form.intvalue.data = componentdata.IntValue
      #   form.add.value = str(componentdata.ID)z
         form.featureid.data = componentdata.ID
+        del form.components
+        return form
+
+
+class AddCategoryObject(CategoryObject):
+    def __init__(self, dbsession, table):
+        CategoryObject.__init__(self, dbsession, table)
+        self.componentid = None
+
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        attname = 'cat{}'.format(componentdata.ID)
+        try:
+            acategory = self.dbsession.query(Definitions).\
+                filter(Definitions.ComponentID==self.componentid).\
+                filter(Definitions.CategoriesID==componentdata.ID).one()
+            setattr(AddCategoriesForm, attname, IntegerField('Order', default=acategory.CategoryOrder))
+        except NoResultFound:
+            setattr(AddCategoriesForm, attname, IntegerField('Order'))
+        form = AddCategoriesForm()
+        delattr(AddCategoriesForm, attname)
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        del form.components
         return form
 
 
@@ -582,7 +627,9 @@ class NewComponent(object):
         if obj.ID is None:
             if obj.Name is not None:
                 if obj.Name != '':
+#                    print obj, obj.Name
                     obj.setid()
+#         print obj, obj.new
         if obj.new:
             return obj.add()
         return
@@ -602,7 +649,8 @@ class NewComponent(object):
                         self.feature.__init__(self.fileoject.dbsession, Features)
                         self.feature.Name = value
                 elif status == 'Category':
-                    if self.category.newname is not None:
+#                    print 'Category:', self.category.newname, self.component.new
+                    if self.category.newname is not None and self.component.new:
                         checkstatus = self.checkid(self.category)
                         if checkstatus is not None:
                             logstatus = '{}{}'.format(logstatus, checkstatus)
@@ -626,8 +674,8 @@ class NewComponent(object):
             # Add the category definitions
             self.category.__init__(self.fileoject.dbsession, Categories)
             self.category.parsename(self.component.Name)
-            self.fileoject.filestatus = '{}{}'.format(self.fileoject.filestatus, self.checkid(self.category))
-            self.categorylist.append(self.category.ID)
+#            self.fileoject.filestatus = '{}{}'.format(self.fileoject.filestatus, self.checkid(self.category))
+#            self.categorylist.append(self.category.ID)
             listorder = 0
             for categoryid in self.categorylist:
                 if categoryid is not None:

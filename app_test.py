@@ -26,6 +26,7 @@ class ComponentsTestCase(unittest.TestCase):
         testsession = createdbsession('sqlite:///testdatabase.db', sqlecho=False, cleardown=True)
         # Initial Populate
         fileload = loadfile('testdata.csv', testsession)
+        print fileload.filestatus
         assert '<18> Data rows successfully loaded.' in fileload.filestatus
 #       testsession.close()
 
@@ -45,11 +46,13 @@ class ComponentsTestCase(unittest.TestCase):
 # Category search into semiconductors to next level
     def test_2categorysearch(self):
         rv = self.app.get('/categorysearch/0/0')
+#        print rv.data
         assert '->Semiconductor' in rv.data
-        rv = self.app.get('/categorysearch/1/12')
+        rv = self.app.get('/categorysearch/1/19')
         assert '->LED' in rv.data
         # Display details of an LED and check the order code
-        rv = self.app.get('/categorysearch/3/16')
+        rv = self.app.get('/categorysearch/3/25')
+#        print rv.data
         assert '55-0125' in rv.data
 
 
@@ -127,11 +130,11 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Attached feature Package:DIP-8' in rv.data
         # Attach it to some categories.
         rv = self.app.post('/addcategories/19', data=dict(
-                cat2=1,
-                cat3=2
+                cat1=1,
+                cat2=2
             ))
-        assert 'Attached category ' in rv.data
-        assert 'Attached category ' in rv.data
+        assert 'Attached category IC to component' in rv.data
+        assert 'Attached category PIC to component' in rv.data
         # Delete this new component
         rv = self.app.post('/delete/component/19')
         assert 'Successfully deleted ID 19 Test component' in rv.data
@@ -144,6 +147,7 @@ class ComponentsTestCase(unittest.TestCase):
         # Page contains a delete option column.
         assert 'Delete' in rv.data
         # Should not offer delete for established category
+#        print rv.data
         assert '"/delete/category/1"' not in rv.data
         # Table should have a Supplies Components header
         assert 'Supplies Components' in rv.data
@@ -161,11 +165,12 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'Test category' in rv.data
         assert 'This is a test category' in rv.data
         # Check delete option available
-        assert '"/delete/category/35"' in rv.data
+#        print rv.data
+        assert '"/delete/category/48"' in rv.data
         # Delete this new category
-        rv = self.app.post('/delete/category/35')
-        assert 'Successfully deleted ID 35 Test category' in rv.data
-        # Cannot delete a supplier in use
+        rv = self.app.post('/delete/category/48')
+        assert 'Successfully deleted ID 48 Test category' in rv.data
+        # Cannot delete a category in use
         rv = self.app.post('/delete/category/1')
         assert 'Cannot delete IC. It is referenced by component(s)' in rv.data
 

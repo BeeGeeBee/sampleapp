@@ -23,7 +23,7 @@ class ComponentsForm(BasicForm):
     id = HiddenField('', [Length(max=3)])
     supplier = SelectField('Supplier', [Length(max=50)])
     location = SelectField('Location', [Length(max=100)])
-    currentstock = IntegerField('CurrentStock', [Length(max=3)])
+    currentstock = IntegerField('Stock', [Length(max=3)])
     reorderlevel = IntegerField('ReorderLevel', [Length(max=3)])
     ordercode = StringField('OrderCode', [Length(max=20)])
     unitprice = DecimalField('UnitPrice', [Length(max=10)])
@@ -41,4 +41,8 @@ class SuppliersForm(BasicForm):
 
 
 class CategoriesForm(BasicForm):
+    pass
+
+
+class AddCategoriesForm(CategoriesForm):
     pass

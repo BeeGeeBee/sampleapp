@@ -15,7 +15,8 @@
     <tr>
         <th>Delete</th>
         {% if option == 'component' %}
-        <th>Features</th>
+        <th>Featr</th>
+        <th>Cats</th>
         {% endif %}
         {% for field in form[-1] %}
             <th>{{field.label}}</th>
@@ -27,6 +28,7 @@
         <td>{{deleteoption[row-1]}}</td>
         {% if option == 'component' %}
         <td>{{featureoption[row-1]}}</td>
+        <td>{{categoryoption[row-1]}}</td>
         {% endif %}
         {% for field in form[row-1] %}
         <td>{{field.data}}</td>
