@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features,\
     DefinedFeatures
 from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm,\
-    AddFeaturesForm, AddCategoriesForm
+    AddFeaturesForm, AddCategoriesForm, UpdateStockForm
 from wtforms import BooleanField, IntegerField
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -113,6 +113,7 @@ def getusage(qry):
             pass
         return result
 
+
 class BaseObject(object):
     def __init__(self, dbsession, table):
         self.ID = None
@@ -171,7 +172,7 @@ class BaseObject(object):
                 return 'Cannot delete {}. It is referenced by component(s) {}'.format(data.Name, usage)
             else:
                 name = data.Name
-                self.dbsession.query(self.table).filter(self.table.ID==itemid).delete()
+                self.dbsession.query(self.table).filter(self.table.ID == itemid).delete()
                 self.dbsession.commit()
                 return 'Successfully deleted ID {} {}'.format(itemid, name)
         return 'Cannot delete. ID {} does not exist.'.format(itemid)
@@ -420,22 +421,20 @@ class ComponentObject(BaseObject):
         self.Name = value
         # See if a category already exists for this name
         try:
-             found = self.dbsession.query(Categories.ID).\
+            found = self.dbsession.query(Categories.ID).\
                  filter(Categories.Name == self.Name).count()
-             if found > 0:
+            if found > 0:
                 self.new = False
-             else:
+            else:
                  self.new = True
-#             print '{} already exists.'.format(self.Name)
         except NoResultFound:
-             self.new = True
-             category = CategoryObject(self.dbsession, Categories)
-             category.parsename(value)
-             qry = self.dbsession.query(func.max(Categories.ID))
-             category.ID = getnextid(self.dbsession, qry)
-#             print 'Adding category {}-{}'.format(category.ID, value)
-             category.add()
-             self.categoriesid = category.ID
+            self.new = True
+            category = CategoryObject(self.dbsession, Categories)
+            category.parsename(value)
+            qry = self.dbsession.query(func.max(Categories.ID))
+            category.ID = getnextid(self.dbsession, qry)
+            category.add()
+            self.categoriesid = category.ID
         return 'Component'
 
     def parseid(self, value):
@@ -497,13 +496,13 @@ class ComponentObject(BaseObject):
         form.supplier.data = \
             [item[1] for item in form.supplier.choices if item[0]==componentdata.SuppliersID][0]
         form.location.data = \
-            [item[1] for item in form.location.choices if item[0]==componentdata.LocationsID][0]
+            [item[1] for item in form.location.choices if item[0] == componentdata.LocationsID][0]
         component = self.getdatabyname(componentdata.Name)
         componentid = component.ID
         form.features = []
         for feature in self.dbsession.query(Features).\
-            join(DefinedFeatures, DefinedFeatures.FeatureID==Features.ID).\
-            filter(DefinedFeatures.ComponentID==componentid).all():
+            join(DefinedFeatures, DefinedFeatures.FeatureID == Features.ID).\
+            filter(DefinedFeatures.ComponentID == componentid).all():
             featureobj = FeatureObject(self.dbsession, Features)
             form.features.append(featureobj.loadform(feature))
             del form.features[-1].components
@@ -517,6 +516,19 @@ class ComponentObject(BaseObject):
             del form.ordercode
         del form.components
         return form
+
+    def delete(self, itemid):
+        data = self.getdatabyid(itemid)
+        if data:
+            # Deleting so remove references in Definitions and DefinedFeatures
+            self.dbsession.query(Definitions).filter(Definitions.ComponentID == itemid).delete()
+            self.dbsession.query(DefinedFeatures).filter(DefinedFeatures.ComponentID == itemid).delete()
+            name = data.Name
+            self.dbsession.query(Categories).filter(Categories.Name == name).delete()
+            self.dbsession.query(self.table).filter(self.table.ID == itemid).delete()
+            self.dbsession.commit()
+            return 'Successfully deleted ID {} {}'.format(itemid, name)
+        return 'Cannot delete. ID {} does not exist.'.format(itemid)
 
 
 class AddFeatureObject(FeatureObject):
@@ -543,7 +555,6 @@ class AddFeatureObject(FeatureObject):
         form.description.data = componentdata.Description
         form.strvalue.data = componentdata.StrValue
         form.intvalue.data = componentdata.IntValue
-     #   form.add.value = str(componentdata.ID)z
         form.featureid.data = componentdata.ID
         del form.components
         return form
@@ -562,8 +573,8 @@ class AddCategoryObject(CategoryObject):
         attname = 'cat{}'.format(componentdata.ID)
         try:
             acategory = self.dbsession.query(Definitions).\
-                filter(Definitions.ComponentID==self.componentid).\
-                filter(Definitions.CategoriesID==componentdata.ID).one()
+                filter(Definitions.ComponentID == self.componentid).\
+                filter(Definitions.CategoriesID == componentdata.ID).one()
             setattr(AddCategoriesForm, attname, IntegerField('Order', default=acategory.CategoryOrder))
         except NoResultFound:
             setattr(AddCategoriesForm, attname, IntegerField('Order'))
@@ -573,6 +584,36 @@ class AddCategoryObject(CategoryObject):
         form.description.data = componentdata.Description
         del form.components
         return form
+
+
+class StockObject(ComponentObject):
+    def __init__(self, dbsession, table):
+        ComponentObject.__init__(self, dbsession, table)
+        self.componentid = None
+
+    def loadform(self, *argv):
+        arglst = []
+        for arg in argv:
+            arglst.append(arg)
+        componentdata = arglst[0]
+        attname = 'stk{}'.format(componentdata.ID)
+        setattr(UpdateStockForm, attname, IntegerField('NewStock'))
+        form = UpdateStockForm()
+        delattr(UpdateStockForm, attname)
+        form.name.data = componentdata.Name
+        form.description.data = componentdata.Description
+        form.supplier.data = componentdata.SuppliersID
+        form.location.data = componentdata.LocationsID
+        form.reorderlevel.data = componentdata.ReorderLevel
+        form.currentstock.data = componentdata.CurrentStock
+        del form.components
+        del form.categoryid
+        del form.datasheet
+        del form.ordercode
+        del form.unitprice
+        del form.id
+        return form
+
 
 
 class NewComponent(object):
@@ -627,9 +668,7 @@ class NewComponent(object):
         if obj.ID is None:
             if obj.Name is not None:
                 if obj.Name != '':
-#                    print obj, obj.Name
                     obj.setid()
-#         print obj, obj.new
         if obj.new:
             return obj.add()
         return
@@ -649,7 +688,6 @@ class NewComponent(object):
                         self.feature.__init__(self.fileoject.dbsession, Features)
                         self.feature.Name = value
                 elif status == 'Category':
-#                    print 'Category:', self.category.newname, self.component.new
                     if self.category.newname is not None and self.component.new:
                         checkstatus = self.checkid(self.category)
                         if checkstatus is not None:
@@ -697,7 +735,7 @@ class NewComponent(object):
                     self.fileoject.filestatus =  '{}Adding feature definition {} {} {}\n'.\
                         format(self.fileoject.filestatus, self.component.ID, featureid, listorder)
         else:
-            self.fileoject.filestatus =  '{}Component {} already exists.\n'.\
+            self.fileoject.filestatus = '{}Component {} already exists.\n'.\
                 format(self.fileoject.filestatus, self.component.Name)
         self.fileoject.dbsession.commit()
         self.rowsloaded += self.component.rowsloaded
@@ -809,6 +847,7 @@ class CategoryTree(object):
         self.id = None
         self.name = None
         self.listorder = None
+
 
 def loadfile(filename=None, session=None):
     fileloader = FileLoad(filename, session)

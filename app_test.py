@@ -40,6 +40,7 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'List By Category' in rv.data
         assert 'List All Components' in rv.data
         assert 'Low Stock Report' in rv.data
+        assert 'Update Stock Levels' in rv.data
         assert 'Data Maintenance' in rv.data
 
 
@@ -138,6 +139,18 @@ class ComponentsTestCase(unittest.TestCase):
         # Delete this new component
         rv = self.app.post('/delete/component/19')
         assert 'Successfully deleted ID 19 Test component' in rv.data
+
+# Update stock
+    def test_2maintstock(self):
+        rv = self.app.get('/updatestock')
+        # Page labelled correctly
+        assert 'Update Stock Levels' in rv.data
+        # Page displays current components
+        assert 'LED 5mm Green' in rv.data
+        rv = self.app.post('/updatestock', data=dict(
+                stk8=999
+            ))
+        assert 'Updated stock for component LED 5mm Green to 999' in rv.data
 
 # Maintain Categories
     def test_2maintcategoriess(self):

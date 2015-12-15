@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{statictitle}}{% endblock title %}
+{% block main %}
+<a>{{statictitle}}</a>
+<script type="text/javascript">
+    function redirect()
+    {
+    var url = "/maintstaticdata/component"
+    window.location.href=url ;
+    }
+</script>
+{% if componentid != None %}
+<form method="post" action="/updatestock">
+<table border="1">
+    <tr>
+        {% for field in form[-1] %}
+            <th>{{field.label}}</th>
+        {% endfor %}
+    </tr>
+    {% for row in range(form|count) %}
+    <tr>
+        {% for field in form[row-1] %}
+        {% if field.id[0:3] == "stk" %}
+        <td>{{field}}</td>
+        {% else %}
+        <td>{{field.data}}</td>
+        {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<p><input type=submit value=Save><input type="button" onclick="redirect()" value="Cancel">
+ </form>
+{% endif %}
+
+{% endblock main %}

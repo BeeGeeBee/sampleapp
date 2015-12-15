@@ -1,21 +1,23 @@
-__author__ = 'Bernard'
-
 from wtforms import Form, StringField, IntegerField, widgets,\
     SelectField, DecimalField, HiddenField, BooleanField, RadioField
 from wtforms.validators import Length
+
+
+__author__ = 'Bernard'
+
 
 class BasicForm(Form):
     name = StringField('Name', [Length(min=1, max=50)])
     description = StringField('Description', [Length(max=250)])
     components = StringField('Supplies Components', [Length(max=5000)])
 
+
 class FeaturesForm(BasicForm):
     strvalue = StringField('String Value', [Length(max=250)])
     intvalue = IntegerField('Integer Value', [Length(max=10)])
-#    categoriesid = IntegerField('CategoriesID', [Length(max=10)])
+
 
 class AddFeaturesForm(FeaturesForm):
-#    add = BooleanField('Add', default=False)
     featureid = IntegerField('ID', [Length(max=4)])
 
 
@@ -29,7 +31,6 @@ class ComponentsForm(BasicForm):
     unitprice = DecimalField('UnitPrice', [Length(max=10)])
     datasheet = StringField('Datasheet', [Length(max=50)])
     categoryid = StringField('Category', [Length(max=5)])
-#    feature = FeaturesForm()
 
 
 class LocationsForm(BasicForm):
@@ -45,4 +46,8 @@ class CategoriesForm(BasicForm):
 
 
 class AddCategoriesForm(CategoriesForm):
+    pass
+
+
+class UpdateStockForm(ComponentsForm):
     pass

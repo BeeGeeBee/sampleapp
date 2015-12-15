@@ -1,13 +1,13 @@
 import os
 from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 from forms import ComponentsForm, LocationsForm, SuppliersForm, BasicForm, FeaturesForm, CategoriesForm,\
-    AddFeaturesForm, AddCategoriesForm
+    AddFeaturesForm, AddCategoriesForm, UpdateStockForm
 from models import Components, Base, Locations, Suppliers, Categories, Definitions, Features, DefinedFeatures
 from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 from componentsmodule import loadfile, Category, HtmlMenu, createdbsession, getnextid, SupplierObject,\
     LocationObject, FeatureObject, CategoryObject, NewComponent, FileLoad, ComponentObject, CategoryTree,\
-    AddFeatureObject, AddCategoryObject
+    AddFeatureObject, AddCategoryObject, StockObject
 
 
 __author__ = 'Bernard'
@@ -108,6 +108,9 @@ def setquerytable(option):
     elif option == 'addcategories':
         querytable = Categories
         pagetitle = 'Categories'
+    elif option == 'updatestock':
+        querytable = Components
+        pagetitle = 'Update Stock Levels'
     else:
         querytable = Locations
         pagetitle = 'Invalid Option'
@@ -137,7 +140,8 @@ def populatelist(option, *args):
             addfeatureoption.append('<a href="/addfeature/{}">Fea</a>'.format(data_row.ID))
             addcategoryoption.append('<a href="/addcategories/{}">Cat</a>'.format(data_row.ID))
         else:
-            if optionobject is not None and option != 'addfeature' and option != 'addcategories':
+            if optionobject is not None and option != 'addfeature' \
+                    and option != 'addcategories' and option != 'updatestock':
                 form[-1].components.data = optionobject.checkusage(data_row.ID)
                 if form[-1].components.data == []:
                     deleteoption.append('<a href="/delete/{}/{}">Del</a>'.format(option, data_row.ID))
@@ -164,6 +168,8 @@ def setform(option, req=None, modify=False):
         form = AddFeaturesForm(req)
     elif option == 'addcategories':
         form = AddCategoriesForm(req)
+    elif option == 'updatestock':
+        form = UpdateStockForm(req)
     else:
         form = BasicForm()
     if modify:
@@ -263,6 +269,8 @@ def chooseobject(option=None):
         obj = AddFeatureObject(session, Features)
     elif option == 'addcategories':
         obj = AddCategoryObject(session, Categories)
+    elif option == 'updatestock':
+        obj = StockObject(session, Components)
     else:
         obj = None
     return obj
@@ -277,6 +285,8 @@ def index():
     menu.label.append('List All Components')
     menu.url.append('/showlist/1')
     menu.label.append('Low Stock Report')
+    menu.url.append('/updatestock')
+    menu.label.append('Update Stock Levels')
     menu.url.append('/datamaint')
     menu.label.append('Data Maintenance')
     return render_template('menu.html', menu=menu, numrows=len(menu.url))
@@ -559,6 +569,30 @@ def addcategories(componentid=None):
         option = 'addcategories'
         (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option, componentid)
     return render_template('addcategories.html', form=form, statictitle=pagetitle, componentid=componentid)
+
+
+@app.route('/updatestock', methods=['GET', 'POST'])
+def updatestock():
+    if request.method == 'POST':
+        for updstock in request.form.keys():
+            newstock = request.form[updstock]
+            if newstock != '':
+                upd = session.query(Components).filter(Components.ID == updstock[3:]).one()
+                session.query(Components).filter(Components.ID == updstock[3:]).\
+                    update({Components.CurrentStock: newstock})
+                flash('Updated stock for component {} to {}.'.format(upd.Name, newstock))
+
+        session.commit()
+        # option = 'component'
+        # (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        # return render_template('maintstatic.html', statictitle=pagetitle, form=form,
+        #                         numrows=len(form), option=option, deleteoption=deleteoptions,
+        #                         featureoption=addfeatureoptions, categoryoption=addcategories)
+        return redirect(url_for('showlist', filtered=0))
+    else:
+        option = 'updatestock'
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+    return render_template('updatestock.html', form=form, statictitle=pagetitle)
 
 
 if __name__=='__main__':
