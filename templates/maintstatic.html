@@ -15,6 +15,7 @@
     <tr>
         <th>Delete</th>
         {% if option == 'component' %}
+        <th>Updt</th>
         <th>Featr</th>
         <th>Cats</th>
         {% endif %}
@@ -27,6 +28,7 @@
         {% autoescape false %}
         <td>{{deleteoption[row-1]}}</td>
         {% if option == 'component' %}
+        <td>{{updateoption[row-1]}}</td>
         <td>{{featureoption[row-1]}}</td>
         <td>{{categoryoption[row-1]}}</td>
         {% endif %}

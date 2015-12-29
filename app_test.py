@@ -105,6 +105,12 @@ class ComponentsTestCase(unittest.TestCase):
         assert 'LED 5mm Green' in rv.data
         # Page contains a delete option column.
         assert 'Delete' in rv.data
+        # Page contains a feature option column.
+        assert 'Featr' in rv.data
+        # Page contains a category option column.
+        assert 'Cats' in rv.data
+        # Page contains an update option column.
+        assert 'Updt' in rv.data
         # Page gives the option to add a component
         assert '"addButton"' in rv.data
         # Table should not have a Supplies Components header
@@ -136,6 +142,11 @@ class ComponentsTestCase(unittest.TestCase):
             ))
         assert 'Attached category IC to component' in rv.data
         assert 'Attached category PIC to component' in rv.data
+        # Update the component.
+        rv = self.app.post('/update/19', data=dict(
+                name='Updated Test'
+            ))
+        assert 'Updated component Updated Test' in rv.data
         # Delete this new component
         rv = self.app.post('/delete/component/19')
         assert 'Successfully deleted ID 19 Test component' in rv.data
@@ -150,6 +161,7 @@ class ComponentsTestCase(unittest.TestCase):
         rv = self.app.post('/updatestock', data=dict(
                 stk8=999
             ))
+        rv = self.app.get('/showlist/0')
         assert 'Updated stock for component LED 5mm Green to 999' in rv.data
 
 # Maintain Categories

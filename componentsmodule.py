@@ -4,7 +4,7 @@ from models import Components, Base, Locations, Suppliers, Categories, Definitio
     DefinedFeatures
 from forms import SuppliersForm, LocationsForm, FeaturesForm, CategoriesForm, ComponentsForm,\
     AddFeaturesForm, AddCategoriesForm, UpdateStockForm
-from wtforms import BooleanField, IntegerField
+from wtforms import BooleanField, IntegerField, SelectField
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
@@ -426,7 +426,7 @@ class ComponentObject(BaseObject):
             if found > 0:
                 self.new = False
             else:
-                 self.new = True
+                self.new = True
         except NoResultFound:
             self.new = True
             category = CategoryObject(self.dbsession, Categories)
@@ -476,13 +476,52 @@ class ComponentObject(BaseObject):
                                                              self.suppliersid,
                                                              self.locationsid)
 
+    def update(self, componentid, form):
+        # First check if the name or supplier or location change that they are still unique
+        checkdata = self.getdatabyid(componentid)
+        if (form['name'] != checkdata.Name) or (form['supplier'] != checkdata.SuppliersID) or \
+                (form['location'] != checkdata.LocationsID):
+            exists = self.dbsession.query(self.table).\
+                filter(self.table.Name == form['name']).\
+                filter(self.table.SuppliersID == form['supplier']).\
+                filter(self.table.LocationsID == form['location']).count()
+            if exists:
+                return 'Cannot update component. One already exists with the same name, supplier and location.'
+        # Quickest way is to delete the component from the components table then add it back in
+        self.dbsession.query(self.table).filter(self.table.ID == componentid).delete()
+        add_component = Components(ID=componentid, Name=form['name'], Description=form['description'],
+                                   CategoriesID=form['categoryid'], SuppliersID=form['supplier'],
+                                   CurrentStock=form['currentstock'], ReorderLevel=form['reorderlevel'],
+                                   LocationsID=form['location'], Datasheet=form['datasheet'],
+                                   OrderCode=form['ordercode'], UnitPrice=form['unitprice'])
+        self.dbsession.add(add_component)
+        self.dbsession.commit()
+        return 'Updating Component {} - {}, {} {}\n'.format(componentid, form['name'],
+                                                            form['supplier'],
+                                                            form['location'])
+
+    def getdatabyname(self, name, supplierid, locationid):
+        qry = None
+        if name is not None:
+            try:
+                qry = self.dbsession.query(self.table).filter(self.table.Name == name).\
+                    filter(self.table.SuppliersID == supplierid).\
+                    filter(self.table.LocationsID == locationid).one()
+            except NoResultFound:
+                qry = None
+        return qry
+
+
     def loadform(self, *argv):
         arglst = []
         for arg in argv:
             arglst.append(arg)
         componentdata = arglst[0]
         trim = arglst[1]
-        form = ComponentsForm()
+        # Add the supplier selectfield
+        supplierchoices = [(a.ID, a.Name) for a in self.dbsession.query(Suppliers).order_by('Name')]
+        suppliercurrent = str([item[1] for item in supplierchoices if item[0] == componentdata.SuppliersID][0])
+        form = ComponentsForm(supplier=componentdata.SuppliersID, location=componentdata.LocationsID)
         form.name.data = componentdata.Name
         form.description.data = componentdata.Description
         form.currentstock.data = componentdata.CurrentStock
@@ -490,19 +529,15 @@ class ComponentObject(BaseObject):
         form.datasheet.data = componentdata.Datasheet
         form.ordercode.data = componentdata.OrderCode
         form.unitprice.data = componentdata.UnitPrice
-        form.supplier.choices = [(a.ID, a.Name) for a in self.dbsession.query(Suppliers).order_by('Name')]
+        form.supplier.choices = supplierchoices
         form.location.choices = \
-                [(a.ID, a.Name+'::'+a.Sublocation) for a in self.dbsession.query(Locations).order_by('Name')]
-        form.supplier.data = \
-            [item[1] for item in form.supplier.choices if item[0]==componentdata.SuppliersID][0]
-        form.location.data = \
-            [item[1] for item in form.location.choices if item[0] == componentdata.LocationsID][0]
-        component = self.getdatabyname(componentdata.Name)
+            [(a.ID, a.Name+'::'+a.Sublocation) for a in self.dbsession.query(Locations).order_by('Name')]
+        component = self.getdatabyname(componentdata.Name, componentdata.SuppliersID, componentdata.LocationsID)
         componentid = component.ID
         form.features = []
         for feature in self.dbsession.query(Features).\
-            join(DefinedFeatures, DefinedFeatures.FeatureID == Features.ID).\
-            filter(DefinedFeatures.ComponentID == componentid).all():
+                join(DefinedFeatures, DefinedFeatures.FeatureID == Features.ID).\
+                filter(DefinedFeatures.ComponentID == componentid).all():
             featureobj = FeatureObject(self.dbsession, Features)
             form.features.append(featureobj.loadform(feature))
             del form.features[-1].components
@@ -544,8 +579,8 @@ class AddFeatureObject(FeatureObject):
         attname = 'add{}'.format(componentdata.ID)
         try:
             afeature = self.dbsession.query(DefinedFeatures).\
-                filter(DefinedFeatures.ComponentID==self.componentid).\
-                filter(DefinedFeatures.FeatureID==componentdata.ID).one()
+                filter(DefinedFeatures.ComponentID == self.componentid).\
+                filter(DefinedFeatures.FeatureID == componentdata.ID).one()
             setattr(AddFeaturesForm, attname, BooleanField('add', default='y'))
         except NoResultFound:
             setattr(AddFeaturesForm, attname, BooleanField('add'))
@@ -613,7 +648,6 @@ class StockObject(ComponentObject):
         del form.unitprice
         del form.id
         return form
-
 
 
 class NewComponent(object):
@@ -721,7 +755,7 @@ class NewComponent(object):
                     add_definition = Definitions(ComponentID=self.component.ID, CategoriesID=categoryid,
                                                  CategoryOrder=listorder)
                     self.fileoject.dbsession.add(add_definition)
-                    self.fileoject.filestatus =  '{}Adding definition {} {} {}\n'.\
+                    self.fileoject.filestatus = '{}Adding definition {} {} {}\n'.\
                         format(self.fileoject.filestatus, self.component.ID, categoryid, listorder)
                 # print self.fileoject.filestatus
             # Add the features
@@ -732,7 +766,7 @@ class NewComponent(object):
                     add_definition = DefinedFeatures(ComponentID=self.component.ID, FeatureID=featureid,
                                                      ListOrder=listorder)
                     self.fileoject.dbsession.add(add_definition)
-                    self.fileoject.filestatus =  '{}Adding feature definition {} {} {}\n'.\
+                    self.fileoject.filestatus = '{}Adding feature definition {} {} {}\n'.\
                         format(self.fileoject.filestatus, self.component.ID, featureid, listorder)
         else:
             self.fileoject.filestatus = '{}Component {} already exists.\n'.\

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Update {{statictitle}}{% endblock title %}
+{% block main %}
+{% if form == None %}
+    <a>Updating {{statictitle}} is not supported.</a>
+{% else %}
+<script type="text/javascript">
+    function redirect()
+    {
+    var url = "/maintstaticdata/{{statictitle}}"
+    window.location.href=url ;
+    }
+</script>
+    <a style="color:black">Update {{statictitle}}.</a>
+    {% from "_formshelp.html" import render_field %}
+    <form method="post" action="/update/{{componentid}}">
+        <dl>
+            {% for formfield in form %}
+                {{ render_field(formfield) }}
+            {% endfor %}
+        </dl>
+        <p><input type=submit value=Save><input type="button" onclick="redirect()" value="Cancel">
+    </form>
+{% endif %}
+{% endblock main %}

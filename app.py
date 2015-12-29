@@ -69,20 +69,12 @@ catsearch = Category()
 
 
 def createstaticquery(querymodel):
-    """
-    Build a query object
-    :return: orm query object
-    """
     queryobj = session.query(querymodel). \
         order_by(querymodel.Name)
     return queryobj
 
 
 def initstaticform(formtemplate=BasicForm):
-    """
-    Create and then initialise form object with list attributes
-    :return:
-    """
     return formtemplate()
 
 
@@ -127,6 +119,7 @@ def populatelist(option, *args):
     deleteoption = []
     addfeatureoption = []
     addcategoryoption = []
+    updateoption = []
     optionobject = chooseobject(option)
     for data_row in queryobj:
         if option == 'addfeature' or option == 'addcategories':
@@ -139,6 +132,7 @@ def populatelist(option, *args):
             deleteoption.append('<a href="/delete/{}/{}">Del</a>'.format(option, data_row.ID))
             addfeatureoption.append('<a href="/addfeature/{}">Fea</a>'.format(data_row.ID))
             addcategoryoption.append('<a href="/addcategories/{}">Cat</a>'.format(data_row.ID))
+            updateoption.append('<a href="/update/{}">Upd</a>'.format(data_row.ID))
         else:
             if optionobject is not None and option != 'addfeature' \
                     and option != 'addcategories' and option != 'updatestock':
@@ -150,7 +144,7 @@ def populatelist(option, *args):
             else:
                 deleteoption.append('')
 
-    return option, pagetitle, form, deleteoption, addfeatureoption, addcategoryoption
+    return option, pagetitle, form, deleteoption, addfeatureoption, addcategoryoption, updateoption
 
 
 def setform(option, req=None, modify=False):
@@ -212,7 +206,7 @@ def adddata(option, form):
     add_item = None
     if option == 'component':
         # Use the NewComponent object to add this
-        fileobj = FileLoad('PASS',session)
+        fileobj = FileLoad('PASS', session)
         formdata = []
         sup = SupplierObject(session, Suppliers)
         form.supplier.data = sup.getdatabyid(form.supplier.data).Name
@@ -237,15 +231,15 @@ def adddata(option, form):
     elif option == 'location':
         staticid = getnewstaticid(Locations)
         add_item = Locations(ID=staticid, Name=form.name.data, Description=form.description.data,
-                                 Sublocation=form.sublocation.data)
+                             Sublocation=form.sublocation.data)
     elif option == 'supplier':
         staticid = getnewstaticid(Suppliers)
         add_item = Suppliers(ID=staticid, Name=form.name.data, Description=form.description.data,
-                                 Website=form.website.data)
+                             Website=form.website.data)
     elif option == 'feature':
         staticid = getnewstaticid(Features)
         add_item = Features(ID=staticid, Name=form.name.data, Description=form.description.data,
-                                 StrValue=form.strvalue.data, IntValue=form.intvalue.data)
+                            StrValue=form.strvalue.data, IntValue=form.intvalue.data)
     else:
         querytable = Locations
     if add_item is not None:
@@ -439,10 +433,10 @@ def datamaintmenu():
 
 @app.route("/maintstaticdata/<option>", methods=['GET', 'POST'])
 def maintstaticdata(option='component'):
-    (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+    (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
     return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                            numrows=len(form), option=option, deleteoption=deleteoptions,
-                            featureoption=addfeatureoptions, categoryoption=addcategories)
+                           numrows=len(form), option=option, deleteoption=deleteoptions,
+                           featureoption=addfeatureoptions, categoryoption=categoriesopt, updateoption=updateoption)
 
 
 @app.route("/fileupload", methods=['GET', 'POST'])
@@ -472,10 +466,11 @@ def addelement(option=None):
             if checknew(option, form.name.data):
                 adddata(option, form)
 
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
         return render_template('maintstatic.html', statictitle=pagetitle, form=form,
                                numrows=len(form), option=option, deleteoption=deleteoptions,
-                               featureoption=addfeatureoptions, categoryoption=addcategories)
+                               featureoption=addfeatureoptions, categoryoption=categoriesopt,
+                               updateoption=updateoption)
     else:
         form = setform(option, None, modify=True)
         if option == 'component':
@@ -488,21 +483,21 @@ def addelement(option=None):
     return render_template('addelement.html', form=form, statictitle=option)
 
 
-@app.route('/delete/<option>/<id>', methods=['GET', 'POST'])
-def deleteelement(option=None, id=None):
-#    form = setform(option, request.form)
+@app.route('/delete/<option>/<elementid>', methods=['GET', 'POST'])
+def deleteelement(option=None, elementid=None):
     obj = chooseobject(option)
     if request.method == 'POST':
         # confirm button was pressed and delete
-        flash(obj.delete(id))
+        flash(obj.delete(elementid))
         # refresh the list
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
         return render_template('maintstatic.html', statictitle=pagetitle, form=form,
                                numrows=len(form), option=option, deleteoption=deleteoptions,
-                               featureoption=addfeatureoptions, categoryoption=addcategories)
+                               featureoption=addfeatureoptions, categoryoption=categoriesopt,
+                               updateoption=updateoption)
     else:
-        form = obj.loadform(obj.getdatabyid(id), False)
-    return render_template('delelement.html', form=form, statictitle=option, readlock='True', elementid=id)
+        form = obj.loadform(obj.getdatabyid(elementid), False)
+    return render_template('delelement.html', form=form, statictitle=option, readlock='True', elementid=elementid)
 
 
 @app.route('/addfeature/<componentid>', methods=['GET', 'POST'])
@@ -510,25 +505,24 @@ def addfeature(componentid=None):
     if request.method == 'POST':
         # first delete existing features defined
         # now save any that have been checked
-        session.query(DefinedFeatures).filter(DefinedFeatures.ComponentID==componentid).delete()
+        session.query(DefinedFeatures).filter(DefinedFeatures.ComponentID == componentid).delete()
         listorder = 0
         for addid in request.form.keys():
             listorder += 1
             additem = DefinedFeatures(ComponentID=componentid, FeatureID=addid[3:], ListOrder=listorder)
             session.add(additem)
-            feature = session.query(Features).filter(Features.ID==addid[3:]).one()
+            feature = session.query(Features).filter(Features.ID == addid[3:]).one()
             flash('Attached feature {}:{} to component.'.format(feature.Name, feature.StrValue))
         session.commit()
-        # for row in form:
-        #     print row.featureid.data, row.add.data
         option = 'component'
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
         return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                                numrows=len(form), option=option, deleteoption=deleteoptions,
-                                featureoption=addfeatureoptions, categoryoption=addcategories)
+                               numrows=len(form), option=option, deleteoption=deleteoptions,
+                               featureoption=addfeatureoptions, categoryoption=categoriesopt,
+                               updateoption=updateoption)
     else:
         option = 'addfeature'
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option, componentid)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option, componentid)
     return render_template('addfeature.html', form=form, statictitle=pagetitle, componentid=componentid)
 
 
@@ -537,37 +531,32 @@ def addcategories(componentid=None):
     if request.method == 'POST':
         # first delete existing categories defined
         # now save any that have been checked
-        session.query(Definitions).filter(Definitions.ComponentID==componentid).delete()
+        session.query(Definitions).filter(Definitions.ComponentID == componentid).delete()
         tmpcomponent = ComponentObject(session, Components)
         tmpcompdata = tmpcomponent.getdatabyid(componentid)
         tmpcategory = CategoryObject(session, Categories)
         tmpcatdata = tmpcategory.getdatabyname(tmpcompdata.Name)
-#        componentname =  session.query(Components.Name).filter(Components.ID==componentid).one()
-#        print tmpcompdata.Name
-#        componentcatid = session.query(Categories.ID).filter(Categories.Name==str(componentname)).one()
         listcount = 1
-#        print request.form
         for addid in request.form.keys():
             listorder = request.form[addid]
             if listorder != '':
                 additem = Definitions(ComponentID=componentid, CategoriesID=addid[3:], CategoryOrder=listorder)
                 session.add(additem)
-                category = session.query(Categories).filter(Categories.ID==addid[3:]).one()
+                category = session.query(Categories).filter(Categories.ID == addid[3:]).one()
                 flash('Attached category {} to component {}.'.format(category.Name, tmpcompdata.Name))
                 listcount += 1
         additem = Definitions(ComponentID=componentid, CategoriesID=tmpcatdata.ID, CategoryOrder=listcount)
         session.add(additem)
         session.commit()
-        # for row in form:
-        #     print row.featureid.data, row.add.data
         option = 'component'
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
         return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-                                numrows=len(form), option=option, deleteoption=deleteoptions,
-                                featureoption=addfeatureoptions, categoryoption=addcategories)
+                               numrows=len(form), option=option, deleteoption=deleteoptions,
+                               featureoption=addfeatureoptions, categoryoption=categoriesopt,
+                               updateoption=updateoption)
     else:
         option = 'addcategories'
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option, componentid)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option, componentid)
     return render_template('addcategories.html', form=form, statictitle=pagetitle, componentid=componentid)
 
 
@@ -583,16 +572,38 @@ def updatestock():
                 flash('Updated stock for component {} to {}.'.format(upd.Name, newstock))
 
         session.commit()
-        # option = 'component'
-        # (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
-        # return render_template('maintstatic.html', statictitle=pagetitle, form=form,
-        #                         numrows=len(form), option=option, deleteoption=deleteoptions,
-        #                         featureoption=addfeatureoptions, categoryoption=addcategories)
         return redirect(url_for('showlist', filtered=0))
     else:
         option = 'updatestock'
-        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories) = populatelist(option)
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, addcategories, updateoption) = populatelist(option)
     return render_template('updatestock.html', form=form, statictitle=pagetitle)
+
+
+@app.route('/update/<componentid>', methods=['GET', 'POST'])
+def updelement(componentid=None):
+    option = 'component'
+    form = setform(option, request.form, modify=True)
+    tmcomponent = ComponentObject(session, Components)
+    if request.method == 'POST':
+        # Update the component
+        flash(tmcomponent.update(componentid, request.form))
+        (option, pagetitle, form, deleteoptions, addfeatureoptions, categoriesopt, updateoption) = populatelist(option)
+        return render_template('maintstatic.html', statictitle=pagetitle, form=form,
+                               numrows=len(form), option=option, deleteoption=deleteoptions,
+                               featureoption=addfeatureoptions, categoryoption=categoriesopt,
+                               updateoption=updateoption)
+    else:
+        # form = setform(option, None, modify=True)
+        compdata = tmcomponent.getdatabyid(componentid)
+        form = tmcomponent.loadform(compdata, False)
+        if option == 'component':
+            # Add suppliers choices
+            form.supplier.choices = [(a.ID, a.Name) for a in session.query(Suppliers).order_by('Name')]
+            # Add location choices
+            form.location.choices = \
+                [(a.ID, a.Name+'::'+a.Sublocation) for a in session.query(Locations).order_by('Name')]
+
+    return render_template('updatecomponent.html', form=form, statictitle=option, componentid=componentid)
 
 
 if __name__=='__main__':

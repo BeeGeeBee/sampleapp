@@ -2,14 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6d8b9ab1-1de4-4abe-b2d2-935be056c7d3" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/templates/updatestock.html" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/templates/updatecomponent.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/database/components.db" afterPath="$PROJECT_DIR$/database/components.db" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testdatabase.db" afterPath="$PROJECT_DIR$/testdatabase.db" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app.py" afterPath="$PROJECT_DIR$/app.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app_test.py" afterPath="$PROJECT_DIR$/app_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/componentsmodule.py" afterPath="$PROJECT_DIR$/componentsmodule.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/forms.py" afterPath="$PROJECT_DIR$/forms.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/maintstatic.html" afterPath="$PROJECT_DIR$/templates/maintstatic.html" />
     </list>
     <ignored path="Components.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -44,10 +44,20 @@
         <entry file="file://$PROJECT_DIR$/app_test.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
+              <caret line="144" column="31" selection-start-line="144" selection-start-column="31" selection-end-line="144" selection-end-column="31" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="maintstatic.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/maintstatic.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="30" column="20" selection-start-line="30" selection-start-column="20" selection-end-line="30" selection-end-column="20" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -55,8 +65,8 @@
       <file leaf-file-name="componentsmodule.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/componentsmodule.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="6.5319147">
-              <caret line="601" column="41" selection-start-line="601" selection-start-column="41" selection-end-line="601" selection-end-column="41" />
+            <state vertical-scroll-proportion="0.76551723">
+              <caret line="487" column="0" selection-start-line="487" selection-start-column="0" selection-end-line="487" selection-end-column="0" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -64,33 +74,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="app.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app.py">
+      <file leaf-file-name="delelement.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/delelement.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="598" column="38" selection-start-line="598" selection-start-column="38" selection-end-line="598" selection-end-column="38" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="updatestock.html" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/updatestock.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.8461537">
-              <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+            <state vertical-scroll-proportion="-5.769231">
+              <caret line="13" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="addcategories.html" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/addcategories.html">
+      <file leaf-file-name="addelement.html" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/templates/addelement.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-8.538462">
-              <caret line="37" column="19" selection-start-line="0" selection-start-column="0" selection-end-line="37" selection-end-column="19" />
+            <state vertical-scroll-proportion="-11.115385">
+              <caret line="17" column="19" selection-start-line="0" selection-start-column="0" selection-end-line="17" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -100,9 +98,21 @@
         <entry file="file://$PROJECT_DIR$/forms.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
+              <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
               <folding>
                 <element signature="e#0#131#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="app.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-6.448276">
+              <caret line="587" column="9" selection-start-line="587" selection-start-column="9" selection-end-line="587" selection-end-column="9" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -158,14 +168,15 @@
         <option value="$PROJECT_DIR$/templates/_formshelp.html" />
         <option value="$PROJECT_DIR$/templates/addelement.html" />
         <option value="$PROJECT_DIR$/templates/base.html" />
-        <option value="$PROJECT_DIR$/templates/delelement.html" />
         <option value="$PROJECT_DIR$/templates/componentform.html" />
         <option value="$PROJECT_DIR$/templates/addfeature.html" />
-        <option value="$PROJECT_DIR$/templates/maintstatic.html" />
         <option value="$PROJECT_DIR$/templates/addcategories.html" />
-        <option value="$PROJECT_DIR$/forms.py" />
-        <option value="$PROJECT_DIR$/app_test.py" />
         <option value="$PROJECT_DIR$/templates/updatestock.html" />
+        <option value="$PROJECT_DIR$/templates/maintstatic.html" />
+        <option value="$PROJECT_DIR$/app_test.py" />
+        <option value="$PROJECT_DIR$/templates/delelement.html" />
+        <option value="$PROJECT_DIR$/templates/updatecomponent.html" />
+        <option value="$PROJECT_DIR$/forms.py" />
         <option value="$PROJECT_DIR$/app.py" />
         <option value="$PROJECT_DIR$/componentsmodule.py" />
       </list>
@@ -203,7 +214,6 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -238,6 +248,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -647,38 +658,44 @@
       <option name="project" value="LOCAL" />
       <updated>1450019452198</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Implemented #12, #13">
+      <created>1450181371807</created>
+      <option name="number" value="00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1450181371807</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 45m 09s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 49m 08s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 49m 25s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 51m 33s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 52m 09s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 53m 42s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 54m 37s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 57m 30s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 00h 58m 26s.xml">
-      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
-    </history-entry>
     <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.15 at 01h 26m 47s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 05m 58s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 09m 43s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 10m 46s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 12m 16s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 13m 17s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 14m 26s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 23m 09s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.16 at 01h 28m 58s.xml">
+      <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_ComponentsTestCase - 2015.12.29 at 01h 24m 48s.xml">
       <configuration name="Unittests in ComponentsTestCase" configurationId="tests" />
     </history-entry>
   </component>
@@ -695,12 +712,12 @@
     <frame x="-8" y="-8" width="1040" height="616" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14160156" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14160156" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32806325" sideWeight="0.49414062" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46442688" sideWeight="0.50390625" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4486166" sideWeight="0.4921875" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.38735178" sideWeight="0.5078125" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31422925" sideWeight="0.5078125" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -773,7 +790,8 @@
     <MESSAGE value="Delete implemented for all modules.&#10;Implemented ticket #s 4,5,6,8,9,11&#10;&#10;Part implemented #12." />
     <MESSAGE value="Part implemented #12 (completed features)." />
     <MESSAGE value="Part implemented #12 (completed categories)." />
-    <option name="LAST_COMMIT_MESSAGE" value="Part implemented #12 (completed categories)." />
+    <MESSAGE value="Implemented #12, #13" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented #12, #13" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -785,13 +803,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/database/load_testdata.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/componentsmodule.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1061,21 +1072,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/addelement.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.807693">
-          <caret line="15" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/delelement.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="28" column="45" selection-start-line="28" selection-start-column="45" selection-end-line="28" selection-end-column="100" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/components.cfg">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.1583851">
@@ -1083,18 +1079,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/maintstatic.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.22972973">
-          <caret line="18" column="21" selection-start-line="18" selection-start-column="21" selection-end-line="18" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/addfeature.html">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="7" column="31" selection-start-line="0" selection-start-column="0" selection-end-line="37" selection-end-column="19" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1108,19 +1096,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/addcategories.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-8.538462">
-          <caret line="37" column="19" selection-start-line="0" selection-start-column="0" selection-end-line="37" selection-end-column="19" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app_test.py">
-      <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
+          <caret line="37" column="19" selection-start-line="0" selection-start-column="0" selection-end-line="37" selection-end-column="19" />
         </state>
       </provider>
     </entry>
@@ -1128,6 +1105,47 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-6.8461537">
           <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/maintstatic.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="30" column="20" selection-start-line="30" selection-start-column="20" selection-end-line="30" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/addelement.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-11.115385">
+          <caret line="17" column="19" selection-start-line="0" selection-start-column="0" selection-end-line="17" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/delelement.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-5.769231">
+          <caret line="13" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="144" column="31" selection-start-line="144" selection-start-column="31" selection-end-line="144" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/updatecomponent.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.9897611">
+          <caret line="24" column="19" selection-start-line="24" selection-start-column="19" selection-end-line="24" selection-end-column="19" />
           <folding />
         </state>
       </provider>
@@ -1135,7 +1153,7 @@
     <entry file="file://$PROJECT_DIR$/forms.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
+          <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
           <folding>
             <element signature="e#0#131#0" expanded="true" />
           </folding>
@@ -1144,8 +1162,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="598" column="38" selection-start-line="598" selection-start-column="38" selection-end-line="598" selection-end-column="38" />
+        <state vertical-scroll-proportion="-6.448276">
+          <caret line="587" column="9" selection-start-line="587" selection-start-column="9" selection-end-line="587" selection-end-column="9" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -1154,8 +1172,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/componentsmodule.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="6.5319147">
-          <caret line="601" column="41" selection-start-line="601" selection-start-column="41" selection-end-line="601" selection-end-column="41" />
+        <state vertical-scroll-proportion="0.76551723">
+          <caret line="487" column="0" selection-start-line="487" selection-start-column="0" selection-end-line="487" selection-end-column="0" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
